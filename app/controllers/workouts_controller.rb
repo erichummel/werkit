@@ -21,7 +21,7 @@ class WorkoutsController < ApplicationController
 
   # POST /workouts or /workouts.json
   def create
-    @workout = Workout.new(workout_params.permit(:user_id, :data_file))
+    @workout = Workout.new(params.require(:workout).permit(:user_id, :data_file))
 
     respond_to do |format|
       if @workout.save
@@ -36,6 +36,7 @@ class WorkoutsController < ApplicationController
 
   # PATCH/PUT /workouts/1 or /workouts/1.json
   def update
+    workout_params = params.require(:workout).permit(:user_id, :data_file)
     respond_to do |format|
       if @workout.update(workout_params)
         format.html { redirect_to workout_url(@workout), notice: "Workout was successfully updated." }
