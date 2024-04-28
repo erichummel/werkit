@@ -19,6 +19,10 @@ class Workout < ApplicationRecord
     ]
   end
 
+  def middle_point
+    [(max_latitude + min_latitude) / 2, (max_longitude + min_longitude) / 2]
+  end
+
   def max_latitude
     waypoints.map{|waypoint| waypoint["latitude"]}.max
   end

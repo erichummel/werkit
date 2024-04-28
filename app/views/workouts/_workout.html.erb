@@ -1,4 +1,4 @@
-<div id="<%= dom_id workout %>">
+<div id="<%= dom_id workout %>" class='workout'>
   <div>
     <strong>User:</strong>
     <%= workout.user.email %>
@@ -19,9 +19,21 @@
     <%= workout.updated_at %>
   </div>
 
+  <div class='map' id="workout-map"></div>
+
   <div>
     <%= link_to 'Show', workout %>
     <%= link_to 'Edit', edit_workout_path(workout) %>
     <%= link_to 'Destroy', workout, method: :delete, data: { confirm: 'Are you sure?' } %>
   </div>
 </div>
+
+<%= javascript_tag do %>
+  document.addEventListener('turbo:load', function() {
+    var map = L.map('workout-map').setView(<%= workout.middle_point.to_json %>, 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    L.marker(<%= workout.middle_point.to_json %>).addTo(map);
+  });
+<% end %>
