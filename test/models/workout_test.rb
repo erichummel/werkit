@@ -6,4 +6,10 @@ class WorkoutTest < ActiveSupport::TestCase
     workout.data_file.attach(io: File.open(Rails.root.join("test", "fixtures", "files", "cycle_workout.json")), filename: "cycle_workout.json")
     assert_equal(10, workout.waypoints.size)
   end
+
+  test "returns four corners of the route" do
+    workout = workouts(:one)
+    workout.data_file.attach(io: File.open(Rails.root.join("test", "fixtures", "files", "cycle_workout.json")), filename: "cycle_workout.json")
+    assert_equal(4, workout.bounding_box.size)
+  end
 end
