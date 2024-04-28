@@ -3,6 +3,7 @@ require "application_system_test_case"
 class WorkoutsTest < ApplicationSystemTestCase
   setup do
     @workout = workouts(:one)
+    sign_in_as(users(:one))
   end
 
   test "visiting the index" do
@@ -13,6 +14,8 @@ class WorkoutsTest < ApplicationSystemTestCase
   test "should create workout" do
     visit workouts_url
     click_on "New workout"
+    assert_selector("select[name='workout[user_id]']")
+    select(users(:one).email, from: "workout[user_id]")
 
     click_on "Create Workout"
 
