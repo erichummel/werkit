@@ -21,7 +21,7 @@ class WorkoutsController < ApplicationController
 
   # POST /workouts or /workouts.json
   def create
-    @workout = Workout.new(workout_params)
+    @workout = Workout.new(workout_params.permit(:user_id, :data_file))
 
     respond_to do |format|
       if @workout.save
