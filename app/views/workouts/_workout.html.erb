@@ -1,2 +1,27 @@
 <div id="<%= dom_id workout %>">
+  <div>
+    <strong>User:</strong>
+    <%= workout.user.email %>
+  </div>
+
+  <div>
+    <strong>Data file:</strong>
+    <%= link_to workout.data_file.filename, workout.data_file %>
+  </div>
+
+  <div>
+    <strong>Created at:</strong>
+    <%= workout.created_at %>
+  </div>
+
+  <div>
+    <strong>Updated at:</strong>
+    <%= workout.updated_at %>
+  </div>
+
+  <div>
+    <%= link_to 'Show', workout %>
+    <%= link_to 'Edit', edit_workout_path(workout) %>
+    <%= link_to 'Destroy', workout, method: :delete, data: { confirm: 'Are you sure?' } %>
+  </div>
 </div>
