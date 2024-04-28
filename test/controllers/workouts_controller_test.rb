@@ -3,6 +3,7 @@ require "test_helper"
 class WorkoutsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @workout = workouts(:one)
+    @user = sign_in_as(users(:one))
   end
 
   test "should get index" do
@@ -17,7 +18,8 @@ class WorkoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "should create workout" do
     assert_difference("Workout.count") do
-      post workouts_url, params: { workout: {  } }
+      data_file = fixture_file_upload('cycle_workout.json', 'application/octet-stream')
+      post workouts_url, params: { workout: { data_file: data_file, user_id: @user.id } }
     end
 
     assert_redirected_to workout_url(Workout.last)
