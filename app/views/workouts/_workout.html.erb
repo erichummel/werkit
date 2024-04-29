@@ -47,18 +47,18 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-    L.marker(<%= workout.middle_point.to_json %>).addTo(map);
+    var workoutMarker = L.marker(<%= workout.middle_point.to_json %>).addTo(map);
     var waypoints = <%= workout.waypoints.to_json.html_safe %>;
     var workout = L.polyline(<%= workout.waypoints_latlng %>, {color: '#00ff00'}).addTo(map);
     workoutTooltip = `
       Workout:
       <ul>
         <li>Started: <%= workout.base["start"] %></li>
-        <li>Average Speed: <%= workout.average_speed %></li>
-        <li>Duration: <%= workout.base["duration"] %></li>
+        <li>Average Speed: ${mph(<%= workout.average_speed %>)}</li>
+        <li>Duration: ${minutes(<%= workout.base["duration"] %>)}</li>
       </ul>
     `
-    workout.bindTooltip(workoutTooltip);
+    workoutMarker.bindTooltip(workoutTooltip);
 
     function mph(mps) {
       const mphConversionFactor = 2.23694;
@@ -67,6 +67,10 @@
     function feet(meters) {
       const feetConversionFactor = 3.28084;
       return meters * feetConversionFactor;
+    }
+    function minutes(seconds) {
+      const minutesConversionFactor = 60;
+      return seconds / minutesConversionFactor;
     }
 
     workout.on('mouseover', function(event){
