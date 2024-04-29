@@ -1,4 +1,6 @@
 div.workout div.map {
   height: 400px;
   width: 600px;
+  resize: both;
+  overflow: auto;
 }
