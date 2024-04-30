@@ -36,7 +36,7 @@ export default class extends Controller {
     return point.distanceTo(L.point(waypoint.table.latitude, waypoint.table.longitude));
   }
 
-  findWaypoint(latlng, waypoints) { // TODO: I let copilot run wild on this function, it's a mess
+  findWaypoint(latlng, waypoints) {
     var nearestWaypoint = waypoints[0];
     const exactWaypoint = waypoints.find((function(searchWaypoint) {
       const mousePoint = L.point(latlng.lat, latlng.lng);
@@ -44,13 +44,19 @@ export default class extends Controller {
           this.waypointDistanceFromPoint(nearestWaypoint, mousePoint)) {
         nearestWaypoint = searchWaypoint;
       }
-      return searchWaypoint.table.latitude == latlng.lat && searchWaypoint.table.longitude == latlng.lng;
+      return searchWaypoint.table.latitude == latlng.lat &&
+        searchWaypoint.table.longitude == latlng.lng;
     }).bind(this));
 
     return exactWaypoint || nearestWaypoint;
   }
 
-  findOppositeWaypoint(waypoint, waypoints) { // TODO: same as above, copilot went wild
+  coordinatesMatch(waypoint1, waypoint2) {
+    return waypoint1.table.latitude == waypoint2.table.latitude &&
+      waypoint1.table.longitude == waypoint2.table.longitude;
+  }
+
+  findOppositeWaypoint(waypoint, waypoints) {
     var nearestOppositeWaypoint = waypoints[0];
     const oppositeWaypoint = waypoints.find((function(searchWaypoint) {
       const searchPoint = L.point(searchWaypoint.table.latitude, searchWaypoint.table.longitude);
@@ -61,9 +67,10 @@ export default class extends Controller {
         ) {
         nearestOppositeWaypoint = searchWaypoint;
       }
-      return waypoint.table.latitude == searchWaypoint.table.latitude &&
-        waypoint.table.longitude == searchWaypoint.table.longitude
+      return this.coordinatesMatch(waypoint, searchWaypoint) &&
+      this.oppositeDirections(waypoint, searchWaypoint);
     }).bind(this));
+
     return oppositeWaypoint || nearestOppositeWaypoint;
   }
 
@@ -131,6 +138,7 @@ export default class extends Controller {
     const waypoint = this.findWaypoint(event.latlng, this.waypoints);
     const oppositeWaypoint = this.findOppositeWaypoint(waypoint, this.waypoints);
     const waypointTooltipContents = this.waypointTooltipTemplate(waypoint) + this.waypointTooltipTemplate(oppositeWaypoint);
+
     const tooltip = L.tooltip()
       .setLatLng(event.latlng)
       .setContent(waypointTooltipContents)
