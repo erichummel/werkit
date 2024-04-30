@@ -22,36 +22,47 @@ export default class extends Controller {
     const distance = L.point(waypoint1.table.latitude, waypoint1.table.longitude)
                       .distanceTo(L.point(waypoint2.table.latitude, waypoint2.table.longitude));
 
-    return distance < 10 && Math.abs(this.timestampForWaypoint(waypoint1) - this.timestampForWaypoint(waypoint2)) > 30000;
+    return distance < 10 && Math.abs(this.timestampForWaypoint(waypoint1) - this.timestampForWaypoint(waypoint2)) > 60000;
+  }
+
+  oppositeDirections(waypoint1, waypoint2) {
+    const course1 = waypoint1.table.course;
+    const course2 = waypoint2.table.course;
+
+    return Math.abs(course1 - course2) > 90;
+  }
+
+  waypointDistanceFromPoint(waypoint, point) {
+    return point.distanceTo(L.point(waypoint.table.latitude, waypoint.table.longitude));
   }
 
   findWaypoint(latlng, waypoints) { // TODO: I let copilot run wild on this function, it's a mess
     var nearestWaypoint = waypoints[0];
-    const exactWaypoint = waypoints.find(function(waypoint) {
+    const exactWaypoint = waypoints.find((function(searchWaypoint) {
       const mousePoint = L.point(latlng.lat, latlng.lng);
-      if (mousePoint.distanceTo(L.point(waypoint.table.latitude, waypoint.table.longitude)) <
-          mousePoint.distanceTo(L.point(nearestWaypoint.table.latitude, nearestWaypoint.table.longitude))) {
-        nearestWaypoint = waypoint;
+      if (this.waypointDistanceFromPoint(searchWaypoint, mousePoint) <
+          this.waypointDistanceFromPoint(nearestWaypoint, mousePoint)) {
+        nearestWaypoint = searchWaypoint;
       }
-      return waypoint.table.latitude == latlng.lat && waypoint.table.longitude == latlng.lng;
-    });
+      return searchWaypoint.table.latitude == latlng.lat && searchWaypoint.table.longitude == latlng.lng;
+    }).bind(this));
 
     return exactWaypoint || nearestWaypoint;
   }
 
-  findOppositeWaypoint(waypoint, waypoints) {
+  findOppositeWaypoint(waypoint, waypoints) { // TODO: same as above, copilot went wild
     var nearestOppositeWaypoint = waypoints[0];
     const oppositeWaypoint = waypoints.find((function(searchWaypoint) {
       const searchPoint = L.point(searchWaypoint.table.latitude, searchWaypoint.table.longitude);
-      if (searchPoint.distanceTo(L.point(waypoint.table.latitude, waypoint.table.longitude)) <
-          searchPoint.distanceTo(L.point(nearestOppositeWaypoint.table.latitude, nearestOppositeWaypoint.table.longitude)) &&
-          this.closeInSpaceNotTime(waypoint, searchWaypoint)
+      if (this.waypointDistanceFromPoint(waypoint, searchPoint) <
+          this.waypointDistanceFromPoint(nearestOppositeWaypoint, searchPoint) &&
+          this.closeInSpaceNotTime(waypoint, searchWaypoint) &&
+          this.oppositeDirections(waypoint, searchWaypoint)
         ) {
         nearestOppositeWaypoint = searchWaypoint;
       }
       return waypoint.table.latitude == searchWaypoint.table.latitude &&
-        waypoint.table.longitude == searchWaypoint.table.longitude &&
-        this.closeInSpaceNotTime(waypoint, searchWaypoint);
+        waypoint.table.longitude == searchWaypoint.table.longitude
     }).bind(this));
     return oppositeWaypoint || nearestOppositeWaypoint;
   }
