@@ -56,10 +56,57 @@ export default class extends Controller {
     return oppositeWaypoint || nearestOppositeWaypoint;
   }
 
+
+  speedEmojiForWaypoint(waypoint) {
+    const speed = waypoint.table.speed;
+    if (speed < 1) {
+      return '🐢';
+    } else if (speed < 3) {
+      return '🚶';
+    } else if (speed < 6) {
+      return '🚲';
+    } else if (speed < 9) {
+      return '🚗';
+    } else {
+      return '🚀';
+    }
+  }
+
+  directionEmojiForWaypoint(waypoint) {
+    const course = waypoint.table.course;
+    const directions = [
+      { name: 'N', min: 348.75, max: 11.25, emoji: '⬆️' },
+      { name: 'NNE', min: 11.25, max: 33.75, emoji: '↗️' },
+      { name: 'NE', min: 33.75, max: 56.25, emoji: '↗️' },
+      { name: 'ENE', min: 56.25, max: 78.75, emoji: '↗️' },
+      { name: 'E', min: 78.75, max: 101.25, emoji: '➡️' },
+      { name: 'ESE', min: 101.25, max: 123.75, emoji: '↘️' },
+      { name: 'SE', min: 123.75, max: 146.25, emoji: '↘️' },
+      { name: 'SSE', min: 146.25, max: 168.75, emoji: '↘️' },
+      { name: 'S', min: 168.75, max: 191.25, emoji: '⬇️' },
+      { name: 'SSW', min: 191.25, max: 213.75, emoji: '↙️' },
+      { name: 'SW', min: 213.75, max: 236.25, emoji: '↙️' },
+      { name: 'WSW', min: 236.25, max: 258.75, emoji: '↙️' },
+      { name: 'W', min: 258.75, max: 281.25, emoji: '⬅️' },
+      { name: 'WNW', min: 281.25, max: 303.75, emoji: '↖️' },
+      { name: 'NW', min: 303.75, max: 326.25, emoji: '↖️' },
+      { name: 'NNW', min: 326.25, max: 348.75, emoji: '↖️' }
+    ];
+
+    for (const direction of directions) {
+      if (course >= direction.min && course < direction.max) {
+        return direction.name + ' ' + direction.emoji;
+      }
+    }
+
+    return '';
+  }
+
   waypointTooltipTemplate(waypoint) {
     return `
       Waypoint:
       <ul>
+        <li>${this.speedEmojiForWaypoint(waypoint)} ${this.directionEmojiForWaypoint(waypoint)}</li>
         <li>Timestamp: ${waypoint.table.timestamp}</li>
         <li>Latitude: ${waypoint.table.latitude}</li>
         <li>Longitude: ${waypoint.table.longitude}</li>
@@ -76,11 +123,10 @@ export default class extends Controller {
     const tooltip = L.tooltip()
       .setLatLng(event.latlng)
       .setContent(waypointTooltipContents)
-      .addTo(this.map);
-
-    setTimeout((function() {
-      this.map.closeTooltip(tooltip);
-    }).bind(this), 3000);
+      .addTo(this.map)
+      .on('click', function() {
+        this.map.closeTooltip(tooltip);
+    });
   }
 
   initializeMap() {
