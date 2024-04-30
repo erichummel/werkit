@@ -1,4 +1,4 @@
-<div id="<%= dom_id workout %>" class='workout'>
+<div id="<%= dom_id workout %>" class='workout' data-controller='workout'>
   <div>
     <strong>User:</strong>
     <%= workout.user.email %>
@@ -19,7 +19,7 @@
     <%= workout.updated_at %>
   </div>
 
-  <div class='map' id="workout-map"></div>
+  <div class='map' id="workout-map" data-action="turbo:load@document->workout#initializeMap"></div>
 
   <div>
     <%= link_to 'Show', workout %>
@@ -29,5 +29,5 @@
 </div>
 
 <%= javascript_tag do %>
-  document.addEventListener('turbo:load', initializeMap );
+  window.workoutJSON = <%= raw workout.to_json %>;
 <% end %>

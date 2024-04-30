@@ -15,7 +15,7 @@ class Workout < ApplicationRecord
   end
 
   def waypoints_latlng
-    waypoints.map{|p| [p.latitude, p.longitude] }.to_json
+    waypoints.map{|p| [p.latitude, p.longitude] }
   end
 
   def average_speed
@@ -36,6 +36,10 @@ class Workout < ApplicationRecord
     #   Geocoder::Calculations.distance_between([waypoint.latitude, waypoint.longitude], [next_waypoint.latitude, next_waypoint.longitude])
     # end.sum
     "#{base["distance"]["qty"].round(2)} #{base["distance"]["units"]}"
+  end
+
+  def duration
+    base["duration"]
   end
 
   def parsed_data
@@ -79,5 +83,25 @@ class Workout < ApplicationRecord
 
   def min_longitude
     waypoints.map{|waypoint| waypoint["longitude"]}.min
+  end
+
+  def as_json(options = {})
+    super.merge({
+      waypoints: waypoints,
+      waypoints_latlng: waypoints_latlng,
+      bounding_box: bounding_box,
+      start: start,
+      finish: finish,
+      middle_point: middle_point,
+      max_latitude: max_latitude,
+      min_latitude: min_latitude,
+      max_longitude: max_longitude,
+      min_longitude: min_longitude,
+      average_speed: average_speed,
+      max_speed: max_speed,
+      min_speed: min_speed,
+      distance: distance,
+      duration: duration,
+    })
   end
 end
