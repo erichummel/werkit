@@ -18,11 +18,13 @@ export default class extends Controller {
     return Date.parse(waypoint.table.timestamp);
   }
 
-  closeInSpaceNotTime(waypoint1, waypoint2) {
-    const distance = L.point(waypoint1.table.latitude, waypoint1.table.longitude)
-                      .distanceTo(L.point(waypoint2.table.latitude, waypoint2.table.longitude));
+  closeInSpace(waypoint1, waypoint2) {
+    const distance = this.waypointDistanceFromWaypoint(waypoint1, waypoint2);
+    return distance < 10;
+  }
 
-    return distance < 10 && Math.abs(this.timestampForWaypoint(waypoint1) - this.timestampForWaypoint(waypoint2)) > 60000;
+  closeInTime(waypoint1, waypoint2) {
+    return Math.abs(this.timestampForWaypoint(waypoint1) - this.timestampForWaypoint(waypoint2)) < 60000;
   }
 
   oppositeDirections(waypoint1, waypoint2) {
@@ -34,6 +36,16 @@ export default class extends Controller {
 
   waypointDistanceFromPoint(waypoint, point) {
     return point.distanceTo(L.point(waypoint.table.latitude, waypoint.table.longitude));
+  }
+
+  waypointDistanceFromWaypoint(waypoint1, waypoint2) {
+    return L.point(waypoint1.table.latitude, waypoint1.table.longitude)
+      .distanceTo(L.point(waypoint2.table.latitude, waypoint2.table.longitude));
+  }
+
+  coordinatesMatch(waypoint1, waypoint2) {
+    return waypoint1.table.latitude == waypoint2.table.latitude &&
+      waypoint1.table.longitude == waypoint2.table.longitude;
   }
 
   findWaypoint(latlng, waypoints) {
@@ -51,24 +63,19 @@ export default class extends Controller {
     return exactWaypoint || nearestWaypoint;
   }
 
-  coordinatesMatch(waypoint1, waypoint2) {
-    return waypoint1.table.latitude == waypoint2.table.latitude &&
-      waypoint1.table.longitude == waypoint2.table.longitude;
-  }
-
   findOppositeWaypoint(waypoint, waypoints) {
     var nearestOppositeWaypoint = waypoints[0];
     const oppositeWaypoint = waypoints.find((function(searchWaypoint) {
       const searchPoint = L.point(searchWaypoint.table.latitude, searchWaypoint.table.longitude);
-      if (this.waypointDistanceFromPoint(waypoint, searchPoint) <
-          this.waypointDistanceFromPoint(nearestOppositeWaypoint, searchPoint) &&
-          this.closeInSpaceNotTime(waypoint, searchWaypoint) &&
-          this.oppositeDirections(waypoint, searchWaypoint)
+      if (this.closeInSpace(waypoint, searchWaypoint) &&
+          !this.closeInTime(waypoint, searchWaypoint) &&
+          this.oppositeDirections(waypoint, searchWaypoint) &&
+          this.waypointDistanceFromPoint(waypoint, searchPoint) < this.waypointDistanceFromPoint(nearestOppositeWaypoint, searchPoint)
         ) {
         nearestOppositeWaypoint = searchWaypoint;
       }
       return this.coordinatesMatch(waypoint, searchWaypoint) &&
-      this.oppositeDirections(waypoint, searchWaypoint);
+        this.oppositeDirections(waypoint, searchWaypoint);
     }).bind(this));
 
     return oppositeWaypoint || nearestOppositeWaypoint;
@@ -93,7 +100,7 @@ export default class extends Controller {
   directionEmojiForWaypoint(waypoint) {
     const course = waypoint.table.course;
     const directions = [
-      { name: 'N', min: 348.75, max: 11.25, emoji: '⬆️' },
+      { name: 'N', min: 348.75, max: 11.25, emoji: '↑' },
       { name: 'NNE', min: 11.25, max: 33.75, emoji: '↗️' },
       { name: 'NE', min: 33.75, max: 56.25, emoji: '↗️' },
       { name: 'ENE', min: 56.25, max: 78.75, emoji: '↗️' },
@@ -101,11 +108,11 @@ export default class extends Controller {
       { name: 'ESE', min: 101.25, max: 123.75, emoji: '↘️' },
       { name: 'SE', min: 123.75, max: 146.25, emoji: '↘️' },
       { name: 'SSE', min: 146.25, max: 168.75, emoji: '↘️' },
-      { name: 'S', min: 168.75, max: 191.25, emoji: '⬇️' },
+      { name: 'S', min: 168.75, max: 191.25, emoji: '↓' },
       { name: 'SSW', min: 191.25, max: 213.75, emoji: '↙️' },
       { name: 'SW', min: 213.75, max: 236.25, emoji: '↙️' },
       { name: 'WSW', min: 236.25, max: 258.75, emoji: '↙️' },
-      { name: 'W', min: 258.75, max: 281.25, emoji: '⬅️' },
+      { name: 'W', min: 258.75, max: 281.25, emoji: '←' },
       { name: 'WNW', min: 281.25, max: 303.75, emoji: '↖️' },
       { name: 'NW', min: 303.75, max: 326.25, emoji: '↖️' },
       { name: 'NNW', min: 326.25, max: 348.75, emoji: '↖️' }
@@ -138,22 +145,33 @@ export default class extends Controller {
     const waypoint = this.findWaypoint(event.latlng, this.waypoints);
     const oppositeWaypoint = this.findOppositeWaypoint(waypoint, this.waypoints);
     const waypointTooltipContents = this.waypointTooltipTemplate(waypoint) + this.waypointTooltipTemplate(oppositeWaypoint);
-
+    const marker1 = L.marker(L.latLng(waypoint.table.latitude, waypoint.table.longitude)).addTo(this.map);
+    const marker2 = L.marker(L.latLng(oppositeWaypoint.table.latitude, oppositeWaypoint.table.longitude)).addTo(this.map);
     const tooltip = L.tooltip()
       .setLatLng(event.latlng)
       .setContent(waypointTooltipContents)
-      .addTo(this.map)
-      .on('click', function() {
-        this.map.closeTooltip(tooltip);
+      .addTo(this.map);
+    debugger
+    this.map.on('click', function() {
+      marker1.remove();
+      marker2.remove();
+      tooltip.remove();
     });
   }
 
   initializeMap() {
     this.workoutJSON = window.workoutJSON; // TODO there's gotta be a more railsy way pass this json up to the javascript controller
-    this.map = L.map('workout-map').setView(this.workoutJSON.middle_point, 13);
+    const mapContainer = document.getElementById('workout-map');
+    this.map = L.map(mapContainer).setView(this.workoutJSON.middle_point, 13);
+    const resizeObserver = new ResizeObserver(() => {
+      this.map.invalidateSize();
+    });
+    resizeObserver.observe(mapContainer);
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(this.map);
+
     this.workoutMarker = L.marker(this.workoutJSON.middle_point).addTo(this.map);
     this.waypoints = this.workoutJSON.waypoints;
     this.workoutPolyline = L.polyline(this.workoutJSON.waypoints_latlng, {color: '#00ff00'}).addTo(this.map);
