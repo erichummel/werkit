@@ -1,4 +1,4 @@
-<div id="<%= dom_id workout %>">
+<div id="<%= dom_id workout %>" class='workout' data-controller='workout'>
   <div>
     <strong>User:</strong>
     <%= workout.user.email %>
@@ -6,7 +6,13 @@
 
   <div>
     <strong>Data file:</strong>
-    <%= link_to workout.data_file.filename, workout.data_file %>
+    <%=
+    begin
+      link_to workout.data_file.name, rails_blob_path(workout.data_file)
+    rescue Exception => e
+      binding.pry
+    end
+    %>
   </div>
 
   <div>
@@ -24,4 +30,12 @@
     <%= link_to 'Edit', edit_workout_path(workout) %>
     <%= link_to 'Destroy', workout, method: :delete, data: { confirm: 'Are you sure?' } %>
   </div>
+
+  <% if include_map %>
+    <div class='map' id="workout-map" data-action="turbo:load@document->workout#initializeMap"></div>
+  <% end %>
 </div>
+
+<%= javascript_tag do %>
+  window.workoutJSON = <%= raw workout.to_json %>;
+<% end %>
