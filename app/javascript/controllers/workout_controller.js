@@ -131,6 +131,10 @@ export default class extends Controller {
     return '';
   }
 
+  easterly(waypoint){
+    return waypoint.table.course >= 0 && waypoint.table.course < 180;
+  }
+
   inclineForWaypoint(waypoint) {
     const nearby = this.nearbyWaypoints(waypoint, 3);
     const incline = nearby.reduce((function(totalIncline, waypoint, index) {
@@ -185,7 +189,9 @@ export default class extends Controller {
         <li>Alt: ${this.feet(waypoint.table.altitude).toPrecision(5)}</li>
         <li>Incline: ${inclineForWaypoint.toPrecision(3)}</li>
       </ul>
-      <div class='incline column ${ this.animating() ? "animating" : ""}' style="transform:rotate(${inclineForWaypoint}deg"></div>
+      <div class='cyclist ${ this.easterly(waypoint) ? "easterly" : "" }'>
+        <div class='incline column ${ this.animating() ? "animating" : ""}' style="transform:rotate(${inclineForWaypoint}deg)"></div>
+      </div>
     </div>
     <div class='animation-controls'>
       ${ this.animating() ? `${baseRideInterval / this.rideInterval}x &nbsp;&nbsp; <em><strong>r</strong> to speed up &nbsp;&nbsp; <strong>p</strong> to pause` : '' }
