@@ -4,7 +4,7 @@
 
 <div id="workouts">
   <% @workouts.each do |workout| %>
-    <%= render workout %>
+    <%= render workout, include_map: false %>
     <p>
       <%= link_to "Show this workout", workout %>
     </p>

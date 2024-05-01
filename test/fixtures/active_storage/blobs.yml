@@ -1,0 +1,1 @@
+cycle_workout: <%= ActiveStorage::FixtureSet.blob filename: "cycle_workout.json", service_name: "test" %>

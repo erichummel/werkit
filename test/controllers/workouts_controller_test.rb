@@ -3,6 +3,10 @@ require "test_helper"
 class WorkoutsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @workout = workouts(:one)
+    @workout2 = workouts(:two)
+    data_file = active_storage_attachments(:workout_data_file)
+    @workout.data_file.attach(data_file.blob)
+    @workout2.data_file.attach(data_file.blob)
     @user = sign_in_as(users(:one))
   end
 
@@ -36,7 +40,7 @@ class WorkoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update workout" do
-    patch workout_url(@workout), params: { workout: {  } }
+    patch workout_url(@workout), params: { workout: { notes: "it was hot, i lost 1 lb in sweat" } }
     assert_redirected_to workout_url(@workout)
   end
 

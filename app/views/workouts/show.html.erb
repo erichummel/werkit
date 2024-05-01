@@ -1,6 +1,6 @@
 <p style="color: green"><%= notice %></p>
 
-<%= render @workout %>
+<%= render @workout, include_map: true %>
 
 <div>
   <%= link_to "Edit this workout", edit_workout_path(@workout) %> |
