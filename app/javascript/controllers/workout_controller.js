@@ -31,16 +31,16 @@ export default class extends Controller {
     const course1 = waypoint1.table.course;
     const course2 = waypoint2.table.course;
 
-    return Math.abs(course1 - course2) > 90;
+    return Math.abs(course1 - course2) > 120;
   }
 
   waypointDistanceFromPoint(waypoint, point) {
-    return point.distanceTo(L.point(waypoint.table.latitude, waypoint.table.longitude));
+    return L.latLng(waypoint.table.latitude, waypoint.table.longitude).distanceTo(L.latLng(point.x, point.y));
   }
 
   waypointDistanceFromWaypoint(waypoint1, waypoint2) {
-    return L.point(waypoint1.table.latitude, waypoint1.table.longitude)
-      .distanceTo(L.point(waypoint2.table.latitude, waypoint2.table.longitude));
+    return L.latLng(waypoint1.table.latitude, waypoint1.table.longitude)
+      .distanceTo(L.latLng(waypoint2.table.latitude, waypoint2.table.longitude));
   }
 
   coordinatesMatch(waypoint1, waypoint2) {
@@ -78,7 +78,7 @@ export default class extends Controller {
         this.oppositeDirections(waypoint, searchWaypoint);
     }).bind(this));
 
-    return oppositeWaypoint || nearestOppositeWaypoint;
+    return oppositeWaypoint || this.closeInSpace(waypoint, nearestOppositeWaypoint) && nearestOppositeWaypoint;
   }
 
 
@@ -127,34 +127,54 @@ export default class extends Controller {
     return '';
   }
 
+  timeOfDay(timestamp) {
+    return new Date(timestamp).toLocaleTimeString();
+  }
+
   waypointTooltipTemplate(waypoint) {
+    if (!waypoint) {
+      return '';
+    }
     return `
       Waypoint:
       <ul>
-        <li>${this.speedEmojiForWaypoint(waypoint)} ${this.directionEmojiForWaypoint(waypoint)}</li>
-        <li>Timestamp: ${waypoint.table.timestamp}</li>
-        <li>Latitude: ${waypoint.table.latitude}</li>
-        <li>Longitude: ${waypoint.table.longitude}</li>
-        <li>Altitude: ${this.feet(waypoint.table.altitude)}</li>
-        <li>Speed: ${this.mph(waypoint.table.speed)}</li>
+        <li>${this.speedEmojiForWaypoint(waypoint)} ${this.directionEmojiForWaypoint(waypoint)} ${this.timeOfDay(waypoint.table.timestamp)}</li>
+        <li>Lat/Long: ${waypoint.table.latitude.toPrecision(6)}/${waypoint.table.longitude.toPrecision(6)}</li>
+        <li>Altitude: ${this.feet(waypoint.table.altitude).toPrecision(5)}</li>
+        <li>Speed: ${this.mph(waypoint.table.speed).toPrecision(4)}</li>
       </ul>
     `;
+  }
+
+  nearbyWaypoints(waypoint) {
+    return this.waypoints.filter((function(searchWaypoint) {
+      return this.waypointDistanceFromWaypoint(waypoint, searchWaypoint) < 5;
+    }).bind(this));
+  }
+
+  waypointMarker(waypoint) {
+    return L.marker(L.latLng(waypoint.table.latitude, waypoint.table.longitude)).addTo(this.map);
+  }
+
+  calculatedDistance() {
+    return this.waypoints.reduce((function(totalDistance, waypoint, index) {
+      if (index > 0) {
+        totalDistance += this.waypointDistanceFromWaypoint(waypoint, this.waypoints[index - 1]);
+      }
+      return totalDistance;
+    }).bind(this), 0);
   }
 
   waypointTooltip(event) {
     const waypoint = this.findWaypoint(event.latlng, this.waypoints);
     const oppositeWaypoint = this.findOppositeWaypoint(waypoint, this.waypoints);
     const waypointTooltipContents = this.waypointTooltipTemplate(waypoint) + this.waypointTooltipTemplate(oppositeWaypoint);
-    const marker1 = L.marker(L.latLng(waypoint.table.latitude, waypoint.table.longitude)).addTo(this.map);
-    const marker2 = L.marker(L.latLng(oppositeWaypoint.table.latitude, oppositeWaypoint.table.longitude)).addTo(this.map);
     const tooltip = L.tooltip()
       .setLatLng(event.latlng)
       .setContent(waypointTooltipContents)
       .addTo(this.map);
-    debugger
+
     this.map.on('click', function() {
-      marker1.remove();
-      marker2.remove();
       tooltip.remove();
     });
   }
@@ -182,6 +202,7 @@ export default class extends Controller {
         <li>Finish: ${this.workoutJSON.finish}</li>
         <li>Average Speed: ${this.mph(this.workoutJSON.average_speed)}</li>
         <li>Duration: ${this.minutes(this.workoutJSON.duration)}</li>
+        <li>Distance: ${this.calculatedDistance()}</li>
       </ul>
     `
 
