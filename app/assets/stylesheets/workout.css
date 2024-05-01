@@ -57,3 +57,7 @@ div.waypointTooltip div.incline {
 div.waypointTooltip div.incline.animating {
   background-image: url(assets/cycler.gif);
 }
+
+div.waypointTooltip div.cyclist.easterly {
+  transform: rotate3d(0, 1, 0, -0.5turn);
+}
