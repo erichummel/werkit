@@ -4,3 +4,56 @@ div.workout div.map {
   resize: both;
   overflow: auto;
 }
+
+div.waypointTooltip {
+  /* min-width: 250px; */
+  display: flex;
+}
+
+div.waypointTooltip h4 {
+  margin: -5px 0 0 0;
+  padding: 0;
+}
+
+div.waypointTooltip ul {
+  list-style-type: none;
+  min-width: 140px;
+  padding: 0;
+  margin: 0;
+}
+
+div.waypointTooltip .column {
+  flex: 50%;
+}
+div.waypointTooltip .row {
+  flex: 100%;
+}
+
+div.waypointTooltip li.heading{
+  display: flex;
+}
+
+div.column.right {
+  text-align: right;
+  margin-right: 10px;
+}
+
+.animation-controls {
+  font-size: 1em;
+  color: #666;
+}
+
+div.waypointTooltip div.incline {
+  width: 107px;
+  height: 80px;
+
+  border-radius: 40px;
+  background-color: rgb(133,203,199);
+  background-image: url(assets/cycler.jpg);
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+div.waypointTooltip div.incline.animating {
+  background-image: url(assets/cycler.gif);
+}

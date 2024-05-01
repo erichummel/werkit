@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+const baseRideInterval = 1000;
 
 export default class extends Controller {
   mph(mps) {
@@ -39,6 +40,9 @@ export default class extends Controller {
   }
 
   waypointDistanceFromWaypoint(waypoint1, waypoint2) {
+    if(!waypoint1 || !waypoint2) {
+      return 0;
+    }
     return L.latLng(waypoint1.table.latitude, waypoint1.table.longitude)
       .distanceTo(L.latLng(waypoint2.table.latitude, waypoint2.table.longitude));
   }
@@ -119,37 +123,80 @@ export default class extends Controller {
     ];
 
     for (const direction of directions) {
-      if (course >= direction.min && course < direction.max) {
-        return direction.name + ' ' + direction.emoji;
+      if (course >= direction.min && direction.max < direction.min || course < direction.max) {
+        return direction.emoji + ' ' + direction.name;
       }
     }
 
     return '';
   }
 
+  inclineForWaypoint(waypoint) {
+    const nearby = this.nearbyWaypoints(waypoint, 3);
+    const incline = nearby.reduce((function(totalIncline, waypoint, index) {
+      if (index > 0) {
+        totalIncline += waypoint.table.altitude - nearby[index - 1].table.altitude;
+      }
+      return totalIncline;
+    }).bind(this), 0);
+
+    const length = this.waypointDistanceFromWaypoint(nearby[0], nearby[nearby.length - 1]);
+
+    return Math.atan(incline / length) * 180 / Math.PI * 2.0;
+  }
+
+
   timeOfDay(timestamp) {
     return new Date(timestamp).toLocaleTimeString();
   }
 
+  workoutTooltipTemplate(workoutJSON) {
+    return `
+      <div class='workoutTooltip'>
+        <h4>Workout</h4>
+        <ul>
+          <li>Start: ${workoutJSON.start}</li>
+          <li>Finish: ${workoutJSON.finish}</li>
+          <li>Average Speed: ${this.mph(workoutJSON.average_speed)}</li>
+          <li>Duration: ${this.minutes(workoutJSON.duration)}</li>
+          <li>Distance: ${this.calculatedDistance()}</li>
+        </ul>
+      </div>
+    `
+  }
+
   waypointTooltipTemplate(waypoint) {
+    const inclineForWaypoint = this.inclineForWaypoint(waypoint);
     if (!waypoint) {
       return '';
     }
-    return `
-      Waypoint:
-      <ul>
-        <li>${this.speedEmojiForWaypoint(waypoint)} ${this.directionEmojiForWaypoint(waypoint)} ${this.timeOfDay(waypoint.table.timestamp)}</li>
-        <li>Lat/Long: ${waypoint.table.latitude.toPrecision(6)}/${waypoint.table.longitude.toPrecision(6)}</li>
-        <li>Altitude: ${this.feet(waypoint.table.altitude).toPrecision(5)}</li>
-        <li>Speed: ${this.mph(waypoint.table.speed).toPrecision(4)}</li>
+    return `<div class='waypointTooltip'>
+      <ul class='column'>
+        <li>${this.timeOfDay(this.timestampForWaypoint(waypoint))}</li>
+        <li class='heading'>
+          <div class= 'column'>
+          ${this.speedEmojiForWaypoint(waypoint)} ${this.mph(waypoint.table.speed).toPrecision(4)} mph
+          </div>
+          <div class='column right'>
+          ${this.directionEmojiForWaypoint(waypoint)}
+          </div>
+        </li>
+        <li>🧭: ${waypoint.table.latitude.toPrecision(6)}/${waypoint.table.longitude.toPrecision(6)}</li>
+        <li>Alt: ${this.feet(waypoint.table.altitude).toPrecision(5)}</li>
+        <li>Incline: ${inclineForWaypoint.toPrecision(3)}</li>
+
       </ul>
+      <div class='incline column ${ this.animating() ? "animating" : ""}' style="transform:rotate(${inclineForWaypoint}deg"></div>
+    </div>
+    <div class='animation-controls'>
+      ${ this.animating() ? `${baseRideInterval / this.rideInterval}x &nbsp;&nbsp; <em><strong>r</strong> to speed up &nbsp;&nbsp; <strong>p</strong> to pause` : '' }
+    </div>
     `;
   }
 
-  nearbyWaypoints(waypoint) {
-    return this.waypoints.filter((function(searchWaypoint) {
-      return this.waypointDistanceFromWaypoint(waypoint, searchWaypoint) < 5;
-    }).bind(this));
+  nearbyWaypoints(waypoint, count) {
+    const waypointIndex = this.waypoints.indexOf(waypoint);
+    return this.waypoints.slice(waypointIndex - count, waypointIndex + count);
   }
 
   waypointMarker(waypoint) {
@@ -169,7 +216,7 @@ export default class extends Controller {
     const waypoint = this.findWaypoint(event.latlng, this.waypoints);
     const oppositeWaypoint = this.findOppositeWaypoint(waypoint, this.waypoints);
     const waypointTooltipContents = this.waypointTooltipTemplate(waypoint) + this.waypointTooltipTemplate(oppositeWaypoint);
-    const tooltip = L.tooltip()
+    const tooltip = L.tooltip({direction: "bottom"})
       .setLatLng(event.latlng)
       .setContent(waypointTooltipContents)
       .addTo(this.map);
@@ -179,8 +226,80 @@ export default class extends Controller {
     });
   }
 
+  bindKeyStrokes() {
+    document.addEventListener('keydown', (function(event) {
+      if (event.key == 'f') {
+        this.nextWaypoint();
+      } else if (event.key == 'a') {
+        this.previousWaypoint();
+      } else if (event.key == 'r') {
+        this.startRide();
+      } else if (event.key == 'p') {
+        this.cancelRide();
+        this.nextWaypoint();
+      }
+    }).bind(this));
+  }
+
+  startRide() {
+    if (this.animating()) {
+      this.rideInterval = this.rideInterval / 2;
+      return;
+    }
+    console.log('setting ride interval to default');
+    this.rideInterval = baseRideInterval;
+    this.ride();
+  }
+
+  ride() {
+    this.rideInterval ||= baseRideInterval;
+    console.log(this.rideInterval);
+    this.nextWaypoint();
+    this.rideTimeout = setTimeout(this.ride.bind(this), this.rideInterval);
+  }
+
+  clearRideTimeout() {
+    clearTimeout(this.rideTimeout);
+    this.rideTimeout = null;
+  }
+
+  cancelRide() {
+    this.clearRideTimeout();
+    this.rideInterval = null;
+  }
+
+  animating() {
+    return !!this.rideTimeout;
+  }
+
+  nextWaypoint() {
+    if(!this.currentIndex || this.currentIndex >= this.waypoints.length - 1) {
+      this.currentIndex = 1;
+    }
+
+    this.currentIndex += 1;
+    this.travelTooltip && this.travelTooltip.remove();
+    this.travelTooltip = L.tooltip({direction: "bottom"})
+      .setLatLng(L.latLng(this.waypoints[this.currentIndex].table.latitude, this.waypoints[this.currentIndex].table.longitude))
+      .setContent(this.waypointTooltipTemplate(this.waypoints[this.currentIndex]))
+      .addTo(this.map);
+  }
+
+  previousWaypoint() {
+    if(!this.currentIndex || this.currentIndex < 0) {
+      this.currentIndex = -1;
+    }
+
+    this.currentIndex -= 1;
+    this.travelTooltip && this.travelTooltip.remove();
+    this.travelTooltip = L.tooltip()
+      .setLatLng(L.latLng(this.waypoints[this.currentIndex].table.latitude, this.waypoints[this.currentIndex].table.longitude))
+      .setContent(this.waypointTooltipTemplate(this.waypoints[this.currentIndex]))
+      .addTo(this.map);
+  }
+
   initializeMap() {
-    this.workoutJSON = window.workoutJSON; // TODO there's gotta be a more railsy way pass this json up to the javascript controller
+    this.workoutJSON = window.workoutJSON; // TODO there's gotta be a more railsy way to pass this json up to the javascript controller
     const mapContainer = document.getElementById('workout-map');
     this.map = L.map(mapContainer).setView(this.workoutJSON.middle_point, 13);
     const resizeObserver = new ResizeObserver(() => {
@@ -195,18 +314,9 @@ export default class extends Controller {
     this.workoutMarker = L.marker(this.workoutJSON.middle_point).addTo(this.map);
     this.waypoints = this.workoutJSON.waypoints;
     this.workoutPolyline = L.polyline(this.workoutJSON.waypoints_latlng, {color: '#00ff00'}).addTo(this.map);
-    this.workoutTooltipTemplate = `
-      Workout:
-      <ul>
-        <li>Start: ${this.workoutJSON.start}</li>
-        <li>Finish: ${this.workoutJSON.finish}</li>
-        <li>Average Speed: ${this.mph(this.workoutJSON.average_speed)}</li>
-        <li>Duration: ${this.minutes(this.workoutJSON.duration)}</li>
-        <li>Distance: ${this.calculatedDistance()}</li>
-      </ul>
-    `
 
-    this.workoutMarker.bindTooltip(this.workoutTooltipTemplate);
+    this.workoutMarker.bindTooltip(this.workoutTooltipTemplate(this.workoutJSON));
     this.workoutPolyline.on('mouseover', this.waypointTooltip.bind(this));
+    this.bindKeyStrokes();
   }
 }
