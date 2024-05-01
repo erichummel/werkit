@@ -184,7 +184,6 @@ export default class extends Controller {
         <li>🧭: ${waypoint.table.latitude.toPrecision(6)}/${waypoint.table.longitude.toPrecision(6)}</li>
         <li>Alt: ${this.feet(waypoint.table.altitude).toPrecision(5)}</li>
         <li>Incline: ${inclineForWaypoint.toPrecision(3)}</li>
-
       </ul>
       <div class='incline column ${ this.animating() ? "animating" : ""}' style="transform:rotate(${inclineForWaypoint}deg"></div>
     </div>
@@ -292,7 +291,7 @@ export default class extends Controller {
 
     this.currentIndex -= 1;
     this.travelTooltip && this.travelTooltip.remove();
-    this.travelTooltip = L.tooltip()
+    this.travelTooltip = L.tooltip({direction: "bottom"})
       .setLatLng(L.latLng(this.waypoints[this.currentIndex].table.latitude, this.waypoints[this.currentIndex].table.longitude))
       .setContent(this.waypointTooltipTemplate(this.waypoints[this.currentIndex]))
       .addTo(this.map);
