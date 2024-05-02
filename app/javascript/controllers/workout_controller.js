@@ -258,9 +258,8 @@ export default class extends Controller {
 
   ride() {
     this.rideInterval ||= baseRideInterval;
-    console.log(this.rideInterval);
-    this.nextWaypoint();
     this.rideTimeout = setTimeout(this.ride.bind(this), this.rideInterval);
+    this.nextWaypoint();
   }
 
   clearRideTimeout() {
