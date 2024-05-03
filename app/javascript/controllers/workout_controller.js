@@ -104,27 +104,27 @@ export default class extends Controller {
   directionEmojiForWaypoint(waypoint) {
     const course = waypoint.table.course;
     const directions = [
-      { name: 'N', min: 348.75, max: 11.25, emoji: '↑' },
+      { name: '&nbsp;N&nbsp;', min: 348.75, max: 11.25, emoji: '↑' },
       { name: 'NNE', min: 11.25, max: 33.75, emoji: '↗️' },
-      { name: 'NE', min: 33.75, max: 56.25, emoji: '↗️' },
+      { name: 'NE&nbsp;', min: 33.75, max: 56.25, emoji: '↗️' },
       { name: 'ENE', min: 56.25, max: 78.75, emoji: '↗️' },
-      { name: 'E', min: 78.75, max: 101.25, emoji: '➡️' },
+      { name: '&nbsp;E&nbsp;', min: 78.75, max: 101.25, emoji: '➡️' },
       { name: 'ESE', min: 101.25, max: 123.75, emoji: '↘️' },
-      { name: 'SE', min: 123.75, max: 146.25, emoji: '↘️' },
+      { name: 'SE&nbsp;', min: 123.75, max: 146.25, emoji: '↘️' },
       { name: 'SSE', min: 146.25, max: 168.75, emoji: '↘️' },
-      { name: 'S', min: 168.75, max: 191.25, emoji: '↓' },
+      { name: '&nbsp;S&nbsp;', min: 168.75, max: 191.25, emoji: '↓' },
       { name: 'SSW', min: 191.25, max: 213.75, emoji: '↙️' },
-      { name: 'SW', min: 213.75, max: 236.25, emoji: '↙️' },
+      { name: 'SW&nbsp;', min: 213.75, max: 236.25, emoji: '↙️' },
       { name: 'WSW', min: 236.25, max: 258.75, emoji: '↙️' },
-      { name: 'W', min: 258.75, max: 281.25, emoji: '←' },
+      { name: '&nbsp;W&nbsp;', min: 258.75, max: 281.25, emoji: '←' },
       { name: 'WNW', min: 281.25, max: 303.75, emoji: '↖️' },
-      { name: 'NW', min: 303.75, max: 326.25, emoji: '↖️' },
+      { name: 'NW&nbsp;', min: 303.75, max: 326.25, emoji: '↖️' },
       { name: 'NNW', min: 326.25, max: 348.75, emoji: '↖️' }
     ];
 
     for (const direction of directions) {
       if (course >= direction.min && direction.max < direction.min || course < direction.max) {
-        return direction.emoji + ' ' + direction.name;
+        return `<span style="font-family: monospace"> ${direction.emoji + ' ' + direction.name}</span>`;
       }
     }
 
@@ -169,7 +169,7 @@ export default class extends Controller {
     `
   }
 
-  waypointPopupTemplate(waypoint) {
+  waypointOverlayTemplate(waypoint) {
     const inclineForWaypoint = this.inclineForWaypoint(waypoint);
     if (!waypoint) {
       return '';
@@ -185,7 +185,7 @@ export default class extends Controller {
           ${this.directionEmojiForWaypoint(waypoint)}
           </div>
         </li>
-        <li>🧭: ${waypoint.table.latitude.toPrecision(6)}/${waypoint.table.longitude.toPrecision(6)}</li>
+        <li>🛰️: ${waypoint.table.latitude.toPrecision(7)}/${waypoint.table.longitude.toPrecision(7)}</li>
         <li>Alt: ${this.feet(waypoint.table.altitude).toPrecision(5)}</li>
         <li>Incline: ${inclineForWaypoint.toPrecision(3)}</li>
       </ul>
@@ -216,8 +216,10 @@ export default class extends Controller {
   waypointTooltipForEvent(event) {
     const waypoint = this.findWaypoint(event.latlng, this.waypoints);
     const oppositeWaypoint = this.findOppositeWaypoint(waypoint, this.waypoints);
-    const waypointTooltipContents = this.waypointTooltipTemplate(waypoint) + this.waypointTooltipTemplate(oppositeWaypoint);
-    const tooltip = L.tooltip({direction: "bottom"})
+    const waypointTooltipContents = this.waypointOverlayTemplate(waypoint) + this.waypointOverlayTemplate(oppositeWaypoint);
+
+    this.waypointTooltip && this.wayPointTooltip.remove();
+    this.wayPointTooltip = L.tooltip({direction: "bottom"})
       .setLatLng(event.latlng)
       .setContent(waypointTooltipContents)
       .addTo(this.map);
@@ -230,8 +232,10 @@ export default class extends Controller {
   bindKeyStrokes() {
     document.addEventListener('keydown', (function(event) {
       if (event.key == 'f') {
+        this.cancelRide();
         this.nextWaypoint();
       } else if (event.key == 'a') {
+        this.cancelRide();
         this.previousWaypoint();
       } else if (event.key == 'r') {
         this.startRide();
@@ -247,7 +251,7 @@ export default class extends Controller {
       this.rideInterval = this.rideInterval / 2;
       return;
     }
-    console.log('setting ride interval to default');
+
     this.rideInterval = baseRideInterval;
     this.ride();
   }
@@ -278,7 +282,7 @@ export default class extends Controller {
     }
 
     const waypoint = this.waypoints[this.currentIndex += 1];
-    this.showWaypointPopup(waypoint);
+    this.showWaypointOverlay(waypoint);
     this.showWaypointMarker(waypoint);
   }
 
@@ -288,7 +292,7 @@ export default class extends Controller {
     }
 
     const waypoint = this.waypoints[this.currentIndex -= 1];
-    this.showWaypointPopup(waypoint);
+    this.showWaypointOverlay(waypoint);
     this.showWaypointMarker(waypoint);
   }
 
@@ -304,12 +308,8 @@ export default class extends Controller {
     this.waypointMarker = L.marker(L.latLng(waypoint.table.latitude, waypoint.table.longitude), {icon: icon}).addTo(this.map);
   }
 
-  showWaypointPopup(waypoint) {
-    this.waypointPopup && this.waypointPopup.remove();
-    this.waypointPopup = L.tooltip()
-      .setLatLng(this.map.getBounds().getNorthEast())
-      .setContent(this.waypointPopupTemplate(waypoint))
-      .addTo(this.map);
+  showWaypointOverlay(waypoint) {
+    document.getElementById("waypoint-stats").innerHTML = this.waypointOverlayTemplate(waypoint);
   }
 
   initializeMap() {
@@ -330,7 +330,7 @@ export default class extends Controller {
     this.workoutPolyline = L.polyline(this.workoutJSON.waypoints_latlng, {color: '#00ff00'}).addTo(this.map);
 
     this.workoutMarker.bindTooltip(this.workoutTooltipTemplate(this.workoutJSON));
-    this.workoutPolyline.on('mouseover', this.waypointTooltipForEvent.bind(this));
+    this.workoutPolyline.on('click', this.waypointTooltipForEvent.bind(this));
     this.bindKeyStrokes();
   }
 }
