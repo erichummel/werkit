@@ -49,13 +49,13 @@ div.waypointTooltip div.incline {
 
   border-radius: 40px;
   background-color: rgb(133,203,199);
-  background-image: url(assets/cycler.jpg);
+  background-image: url(assets/cyclist.jpg);
   background-size: contain;
   background-repeat: no-repeat;
 }
 
 div.waypointTooltip div.incline.animating {
-  background-image: url(assets/cycler.gif);
+  background-image: url(assets/cyclist.gif);
 }
 
 div.waypointTooltip div.cyclist {
@@ -64,4 +64,22 @@ div.waypointTooltip div.cyclist {
 
 div.waypointTooltip div.cyclist.easterly {
   transform: rotate3d(0, 1, 0, -0.5turn);
+}
+
+img.leaflet-marker-icon.cyclist.westerly, img.leaflet-marker-shadow.cyclist.westerly {
+  transform: rotate3d(0, 1, 0, 0.5turn);
+}
+
+img.leaflet-marker-icon.cyclist {
+  width: 30px;
+  height: 30px;
+  margin-top: -24px;
+}
+
+img.leaflet-marker-shadow.cyclist {
+  width: 38px;
+  height: 12px;
+  margin-top: -6px;
+  margin-left: 3px;
+
 }
