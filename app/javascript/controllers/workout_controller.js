@@ -169,7 +169,7 @@ export default class extends Controller {
     `
   }
 
-  waypointTooltipTemplate(waypoint) {
+  waypointPopupTemplate(waypoint) {
     const inclineForWaypoint = this.inclineForWaypoint(waypoint);
     if (!waypoint) {
       return '';
@@ -204,10 +204,6 @@ export default class extends Controller {
     return this.waypoints.slice(waypointIndex - count, waypointIndex + count);
   }
 
-  waypointMarker(waypoint) {
-    return L.marker(L.latLng(waypoint.table.latitude, waypoint.table.longitude)).addTo(this.map);
-  }
-
   calculatedDistance() {
     return this.waypoints.reduce((function(totalDistance, waypoint, index) {
       if (index > 0) {
@@ -217,7 +213,7 @@ export default class extends Controller {
     }).bind(this), 0);
   }
 
-  waypointTooltip(event) {
+  waypointTooltipForEvent(event) {
     const waypoint = this.findWaypoint(event.latlng, this.waypoints);
     const oppositeWaypoint = this.findOppositeWaypoint(waypoint, this.waypoints);
     const waypointTooltipContents = this.waypointTooltipTemplate(waypoint) + this.waypointTooltipTemplate(oppositeWaypoint);
@@ -281,12 +277,9 @@ export default class extends Controller {
       this.currentIndex = 1;
     }
 
-    this.currentIndex += 1;
-    this.travelTooltip && this.travelTooltip.remove();
-    this.travelTooltip = L.tooltip({direction: "bottom"})
-      .setLatLng(L.latLng(this.waypoints[this.currentIndex].table.latitude, this.waypoints[this.currentIndex].table.longitude))
-      .setContent(this.waypointTooltipTemplate(this.waypoints[this.currentIndex]))
-      .addTo(this.map);
+    const waypoint = this.waypoints[this.currentIndex += 1];
+    this.showWaypointPopup(waypoint);
+    this.showWaypointMarker(waypoint);
   }
 
   previousWaypoint() {
@@ -294,11 +287,28 @@ export default class extends Controller {
       this.currentIndex = -1;
     }
 
-    this.currentIndex -= 1;
-    this.travelTooltip && this.travelTooltip.remove();
-    this.travelTooltip = L.tooltip({direction: "bottom"})
-      .setLatLng(L.latLng(this.waypoints[this.currentIndex].table.latitude, this.waypoints[this.currentIndex].table.longitude))
-      .setContent(this.waypointTooltipTemplate(this.waypoints[this.currentIndex]))
+    const waypoint = this.waypoints[this.currentIndex -= 1];
+    this.showWaypointPopup(waypoint);
+    this.showWaypointMarker(waypoint);
+  }
+
+  showWaypointMarker(waypoint) {
+    const icon = L.icon({
+      iconUrl: '/assets/cyclist-simple.png',
+      shadowUrl: '/assets/cyclist-simple-shadow.png',
+      iconAnchor: [15, 30],
+      shadowAnchor: [12, 15],
+      className: `cyclist ${ !this.easterly(waypoint) ? "westerly" : "" }`,
+    })
+    this.waypointMarker && this.waypointMarker.remove();
+    this.waypointMarker = L.marker(L.latLng(waypoint.table.latitude, waypoint.table.longitude), {icon: icon}).addTo(this.map);
+  }
+
+  showWaypointPopup(waypoint) {
+    this.waypointPopup && this.waypointPopup.remove();
+    this.waypointPopup = L.tooltip()
+      .setLatLng(this.map.getBounds().getNorthEast())
+      .setContent(this.waypointPopupTemplate(waypoint))
       .addTo(this.map);
   }
 
@@ -320,7 +330,7 @@ export default class extends Controller {
     this.workoutPolyline = L.polyline(this.workoutJSON.waypoints_latlng, {color: '#00ff00'}).addTo(this.map);
 
     this.workoutMarker.bindTooltip(this.workoutTooltipTemplate(this.workoutJSON));
-    this.workoutPolyline.on('mouseover', this.waypointTooltip.bind(this));
+    this.workoutPolyline.on('mouseover', this.waypointTooltipForEvent.bind(this));
     this.bindKeyStrokes();
   }
 }
