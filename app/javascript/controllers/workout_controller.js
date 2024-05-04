@@ -169,12 +169,35 @@ export default class extends Controller {
     `
   }
 
+  keyboardControlsTemplate() {
+    const animationMultiplier = (baseRideInterval/ this.rideInterval ) + "x";
+    var controls;
+    if(this.animating()){
+      controls = `
+        <em>
+          <span>${animationMultiplier} &nbsp;</span>
+          <span class='button'><strong>r</strong>ide faster &nbsp;</span>
+          <span class='button'><strong>p</strong>ause &nbsp;</span>
+          <span class='button'>re<strong>s</strong>tart</span>
+        </em>`
+    } else {
+      controls = `
+        <em>
+          <span class='button'><strong>r</strong>ide &nbsp;</span>
+          <span class='button'><strong>f</strong>orward &nbsp;</span>
+          <span class='button'>b<strong>a</strong>ck &nbsp;</span>
+          <span class='button'>re<strong>s</strong>tart</span>
+        </em>`
+    }
+    return `<div class='animation-controls'>${controls}</div>`;
+  }
+
   waypointOverlayTemplate(waypoint) {
     const inclineForWaypoint = this.inclineForWaypoint(waypoint);
     if (!waypoint) {
       return '';
     }
-    return `<div class='waypointTooltip'>
+    return `<div class='waypoint-stats'>
       <ul class='column'>
         <li>${this.timeOfDay(this.timestampForWaypoint(waypoint))}</li>
         <li class='heading'>
@@ -193,9 +216,7 @@ export default class extends Controller {
         <div class='incline column ${ this.animating() ? "animating" : ""}' style="transform:rotate(${inclineForWaypoint}deg)"></div>
       </div>
     </div>
-    <div class='animation-controls'>
-      ${ this.animating() ? `${baseRideInterval / this.rideInterval}x &nbsp;&nbsp; <em><strong>r</strong> to speed up &nbsp;&nbsp; <strong>p</strong> to pause` : '' }
-    </div>
+    ${this.keyboardControlsTemplate()}
     `;
   }
 
@@ -225,11 +246,11 @@ export default class extends Controller {
       .addTo(this.map);
 
     this.map.on('click', function() {
-      tooltip.remove();
+      this.waypointTooltip.remove();
     });
   }
 
-  bindKeyStrokes() {
+  bindKeyStrokes() { // TODO DRY this up
     document.addEventListener('keydown', (function(event) {
       if (event.key == 'f') {
         this.cancelRide();
@@ -242,6 +263,29 @@ export default class extends Controller {
       } else if (event.key == 'p') {
         this.cancelRide();
         this.nextWaypoint();
+      } else if (event.key == 's') {
+        this.cancelRide();
+        this.resetWaypoint();
+      }
+    }).bind(this));
+  }
+
+  bindAnimationControlClicks(element) {
+    element.addEventListener('click', (function(event) {
+      const action = event.target.innerText.trim();
+      if (/ride/.test(action)) {
+        this.startRide();
+      } else if (/pause/.test(action)) {
+        this.cancelRide();
+        this.nextWaypoint();
+      } else if (/restart/.test(action)) {
+        this.resetWaypoint();
+      } else if (/forward/.test(action)) {
+        this.cancelRide();
+        this.nextWaypoint();
+      } else if (/back/.test(action)) {
+        this.cancelRide();
+        this.previousWaypoint();
       }
     }).bind(this));
   }
@@ -296,6 +340,13 @@ export default class extends Controller {
     this.showWaypointMarker(waypoint);
   }
 
+  resetWaypoint() {
+    this.currentIndex = 0;
+    const waypoint = this.waypoints[this.currentIndex];
+    this.showWaypointOverlay(waypoint);
+    this.showWaypointMarker(waypoint);
+  }
+
   showWaypointMarker(waypoint) {
     const icon = L.icon({
       iconUrl: '/assets/cyclist-simple.png',
@@ -309,7 +360,13 @@ export default class extends Controller {
   }
 
   showWaypointOverlay(waypoint) {
-    document.getElementById("waypoint-stats").innerHTML = this.waypointOverlayTemplate(waypoint);
+    const waypointOverlay = document.getElementById('waypoint-stats');
+    waypointOverlay.innerHTML = this.waypointOverlayTemplate(waypoint);
+    if(!this.waypointOverlayInitialized) {
+      console.log("overlaid");
+      this.bindAnimationControlClicks(waypointOverlay);
+      this.waypointOverlayInitialized = true;
+    }
   }
 
   initializeMap() {
