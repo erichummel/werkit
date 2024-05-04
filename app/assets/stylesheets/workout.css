@@ -5,32 +5,65 @@ div.workout div.map {
   overflow: auto;
 }
 
-div.waypointTooltip {
-  /* min-width: 250px; */
-  display: flex;
+div#waypoint-stats {
+  width: 300px;
+  padding: 1em;
+  background-color: rgba(255,255,255,0.8);
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 10px;
+  position: absolute;
+  right: 0;
+  z-index: 1000;
 }
 
-div.waypointTooltip h4 {
+div.waypoint-stats {
+    display: flex;
+}
+
+div.waypoint-stats h4 {
   margin: -5px 0 0 0;
   padding: 0;
 }
 
-div.waypointTooltip ul {
+div.waypoint-stats ul {
   list-style-type: none;
   min-width: 140px;
   padding: 0;
   margin: 0;
 }
 
-div.waypointTooltip .column {
+div.waypoint-stats .column {
   flex: 50%;
 }
-div.waypointTooltip .row {
+div.waypoint-stats .row {
   flex: 100%;
 }
 
-div.waypointTooltip li.heading{
+div.waypoint-stats li.heading{
   display: flex;
+}
+
+div.waypoint-stats div.incline {
+  width: 107px;
+  height: 80px;
+
+  border-radius: 40px;
+  background-color: rgb(133,203,199);
+  background-image: url(assets/cyclist.jpg);
+  background-size: contain;
+  background-repeat: no-repeat;
+  margin-top: 1em;
+}
+
+div.waypoint-stats div.incline.animating {
+  background-image: url(assets/cyclist.gif);
+}
+
+div.waypoint-stats div.cyclist {
+  margin-top: 0.4em;
+}
+
+div.waypoint-stats div.cyclist.easterly {
+  transform: rotate3d(0, 1, 0, -0.5turn);
 }
 
 div.column.right {
@@ -38,22 +71,32 @@ div.column.right {
   margin-right: 10px;
 }
 
-.animation-controls {
+div.animation-controls {
   font-size: 1em;
-  color: #666;
 }
 
-div.waypointTooltip div.incline {
-  width: 107px;
-  height: 80px;
-
-  border-radius: 40px;
-  background-color: rgb(133,203,199);
-  background-image: url(assets/cycler.jpg);
-  background-size: contain;
-  background-repeat: no-repeat;
+div.animation-controls span.button:hover{
+  color: #44AA44;
+  cursor: pointer;
 }
 
-div.waypointTooltip div.incline.animating {
-  background-image: url(assets/cycler.gif);
+div.animation-controls strong {
+  color: #44AA44;
+}
+
+img.leaflet-marker-icon.cyclist.westerly, img.leaflet-marker-shadow.cyclist.westerly {
+  transform: rotate3d(0, 1, 0, 0.5turn);
+}
+
+img.leaflet-marker-icon.cyclist {
+  width: 30px;
+  height: 30px;
+  margin-top: -24px;
+}
+
+img.leaflet-marker-shadow.cyclist {
+  width: 30px;
+  height: 30px;
+  margin-top: -6px;
+  margin-left: 3px;
 }
