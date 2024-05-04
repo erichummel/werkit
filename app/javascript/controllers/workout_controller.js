@@ -348,12 +348,17 @@ export default class extends Controller {
   }
 
   showWaypointMarker(waypoint) {
+    const iconSets = {
+      easterly: { base: 'cyclist-simple.png', shadow: 'cyclist-simple-shadow.png'},
+      westerly: { base: 'cyclist-simple-west.png', shadow: 'cyclist-simple-shadow-west.png'},
+    }
+    const iconSet = this.easterly(waypoint) ? iconSets.easterly : iconSets.westerly;
     const icon = L.icon({
-      iconUrl: '/assets/cyclist-simple.png',
-      shadowUrl: '/assets/cyclist-simple-shadow.png',
+      iconUrl: `/assets/${iconSet.base}`,
+      // shadowUrl: `/assets/${iconSet.shadow}`,
       iconAnchor: [15, 30],
       shadowAnchor: [12, 15],
-      className: `cyclist ${ !this.easterly(waypoint) ? "westerly" : "" }`,
+      className: `cyclist`,
     })
     this.waypointMarker && this.waypointMarker.remove();
     this.waypointMarker = L.marker(L.latLng(waypoint.table.latitude, waypoint.table.longitude), {icon: icon}).addTo(this.map);
@@ -363,7 +368,6 @@ export default class extends Controller {
     const waypointOverlay = document.getElementById('waypoint-stats');
     waypointOverlay.innerHTML = this.waypointOverlayTemplate(waypoint);
     if(!this.waypointOverlayInitialized) {
-      console.log("overlaid");
       this.bindAnimationControlClicks(waypointOverlay);
       this.waypointOverlayInitialized = true;
     }
