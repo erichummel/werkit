@@ -104,31 +104,35 @@ export default class extends Controller {
   directionEmojiForWaypoint(waypoint) {
     const course = waypoint.table.course;
     const directions = [
-      { name: 'N', min: 348.75, max: 11.25, emoji: '↑' },
+      { name: '&nbsp;N&nbsp;', min: 348.75, max: 11.25, emoji: '↑' },
       { name: 'NNE', min: 11.25, max: 33.75, emoji: '↗️' },
-      { name: 'NE', min: 33.75, max: 56.25, emoji: '↗️' },
+      { name: 'NE&nbsp;', min: 33.75, max: 56.25, emoji: '↗️' },
       { name: 'ENE', min: 56.25, max: 78.75, emoji: '↗️' },
-      { name: 'E', min: 78.75, max: 101.25, emoji: '➡️' },
+      { name: '&nbsp;E&nbsp;', min: 78.75, max: 101.25, emoji: '➡️' },
       { name: 'ESE', min: 101.25, max: 123.75, emoji: '↘️' },
-      { name: 'SE', min: 123.75, max: 146.25, emoji: '↘️' },
+      { name: 'SE&nbsp;', min: 123.75, max: 146.25, emoji: '↘️' },
       { name: 'SSE', min: 146.25, max: 168.75, emoji: '↘️' },
-      { name: 'S', min: 168.75, max: 191.25, emoji: '↓' },
+      { name: '&nbsp;S&nbsp;', min: 168.75, max: 191.25, emoji: '↓' },
       { name: 'SSW', min: 191.25, max: 213.75, emoji: '↙️' },
-      { name: 'SW', min: 213.75, max: 236.25, emoji: '↙️' },
+      { name: 'SW&nbsp;', min: 213.75, max: 236.25, emoji: '↙️' },
       { name: 'WSW', min: 236.25, max: 258.75, emoji: '↙️' },
-      { name: 'W', min: 258.75, max: 281.25, emoji: '←' },
+      { name: '&nbsp;W&nbsp;', min: 258.75, max: 281.25, emoji: '←' },
       { name: 'WNW', min: 281.25, max: 303.75, emoji: '↖️' },
-      { name: 'NW', min: 303.75, max: 326.25, emoji: '↖️' },
+      { name: 'NW&nbsp;', min: 303.75, max: 326.25, emoji: '↖️' },
       { name: 'NNW', min: 326.25, max: 348.75, emoji: '↖️' }
     ];
 
     for (const direction of directions) {
       if (course >= direction.min && direction.max < direction.min || course < direction.max) {
-        return direction.emoji + ' ' + direction.name;
+        return `<span style="font-family: monospace"> ${direction.emoji + ' ' + direction.name}</span>`;
       }
     }
 
     return '';
+  }
+
+  easterly(waypoint){
+    return !waypoint || waypoint.table.course >= 0 && waypoint.table.course < 180;
   }
 
   inclineForWaypoint(waypoint) {
@@ -165,12 +169,35 @@ export default class extends Controller {
     `
   }
 
-  waypointTooltipTemplate(waypoint) {
+  keyboardControlsTemplate() {
+    const animationMultiplier = (baseRideInterval/ this.rideInterval ) + "x";
+    var controls;
+    if(this.animating()){
+      controls = `
+        <em>
+          <span>${animationMultiplier} &nbsp;</span>
+          <span class='button'><strong>r</strong>ide faster &nbsp;</span>
+          <span class='button'><strong>p</strong>ause &nbsp;</span>
+          <span class='button'>re<strong>s</strong>tart</span>
+        </em>`
+    } else {
+      controls = `
+        <em>
+          <span class='button'><strong>r</strong>ide &nbsp;</span>
+          <span class='button'><strong>f</strong>orward &nbsp;</span>
+          <span class='button'>b<strong>a</strong>ck &nbsp;</span>
+          <span class='button'>re<strong>s</strong>tart</span>
+        </em>`
+    }
+    return `<div class='animation-controls'>${controls}</div>`;
+  }
+
+  waypointOverlayTemplate(waypoint) {
     const inclineForWaypoint = this.inclineForWaypoint(waypoint);
     if (!waypoint) {
       return '';
     }
-    return `<div class='waypointTooltip'>
+    return `<div class='waypoint-stats'>
       <ul class='column'>
         <li>${this.timeOfDay(this.timestampForWaypoint(waypoint))}</li>
         <li class='heading'>
@@ -181,25 +208,21 @@ export default class extends Controller {
           ${this.directionEmojiForWaypoint(waypoint)}
           </div>
         </li>
-        <li>🧭: ${waypoint.table.latitude.toPrecision(6)}/${waypoint.table.longitude.toPrecision(6)}</li>
+        <li>🛰️: ${waypoint.table.latitude.toPrecision(7)}/${waypoint.table.longitude.toPrecision(7)}</li>
         <li>Alt: ${this.feet(waypoint.table.altitude).toPrecision(5)}</li>
         <li>Incline: ${inclineForWaypoint.toPrecision(3)}</li>
       </ul>
-      <div class='incline column ${ this.animating() ? "animating" : ""}' style="transform:rotate(${inclineForWaypoint}deg"></div>
+      <div class='cyclist ${ this.easterly(waypoint) ? "easterly" : "" }'>
+        <div class='incline column ${ this.animating() ? "animating" : ""}' style="transform:rotate(${inclineForWaypoint}deg)"></div>
+      </div>
     </div>
-    <div class='animation-controls'>
-      ${ this.animating() ? `${baseRideInterval / this.rideInterval}x &nbsp;&nbsp; <em><strong>r</strong> to speed up &nbsp;&nbsp; <strong>p</strong> to pause` : '' }
-    </div>
+    ${this.keyboardControlsTemplate()}
     `;
   }
 
   nearbyWaypoints(waypoint, count) {
     const waypointIndex = this.waypoints.indexOf(waypoint);
     return this.waypoints.slice(waypointIndex - count, waypointIndex + count);
-  }
-
-  waypointMarker(waypoint) {
-    return L.marker(L.latLng(waypoint.table.latitude, waypoint.table.longitude)).addTo(this.map);
   }
 
   calculatedDistance() {
@@ -211,33 +234,81 @@ export default class extends Controller {
     }).bind(this), 0);
   }
 
-  waypointTooltip(event) {
+  selectWaypointForEvent(event) {
     const waypoint = this.findWaypoint(event.latlng, this.waypoints);
     const oppositeWaypoint = this.findOppositeWaypoint(waypoint, this.waypoints);
-    const waypointTooltipContents = this.waypointTooltipTemplate(waypoint) + this.waypointTooltipTemplate(oppositeWaypoint);
-    const tooltip = L.tooltip({direction: "bottom"})
+    const waypointTooltipContents = this.waypointOverlayTemplate(waypoint) + this.waypointOverlayTemplate(oppositeWaypoint);
+
+    this.waypointTooltip && this.wayPointTooltip.remove();
+    this.wayPointTooltip = L.tooltip({direction: "bottom"})
       .setLatLng(event.latlng)
       .setContent(waypointTooltipContents)
       .addTo(this.map);
 
     this.map.on('click', function() {
-      tooltip.remove();
+      this.waypointTooltip.remove();
     });
   }
 
   bindKeyStrokes() {
-    document.addEventListener('keydown', (function(event) {
-      if (event.key == 'f') {
-        this.nextWaypoint();
-      } else if (event.key == 'a') {
-        this.previousWaypoint();
-      } else if (event.key == 'r') {
+    document.addEventListener('keydown', this.handleKeyStrokes.bind(this));
+  }
+
+  handleKeyStrokes(event) {
+    const key = event.key;
+    switch (key) {
+      case 'r':
         this.startRide();
-      } else if (event.key == 'p') {
+        break;
+      case 'p':
         this.cancelRide();
-        this.nextWaypoint();
-      }
-    }).bind(this));
+        this.selectNextWaypoint();
+        break;
+      case 's':
+        this.cancelRide();
+        this.resetWaypoint();
+        break;
+      case 'f':
+        this.cancelRide();
+        this.selectNextWaypoint();
+        break;
+      case 'a':
+        this.cancelRide();
+        this.selectPreviousWaypoint();
+        break;
+      default:
+        break;
+    }
+  }
+
+  bindAnimationControlClicks(element) {
+    element.addEventListener('click', this.handleAnimationControlClicks.bind(this));
+  }
+
+  handleAnimationControlClicks(event) {
+    const action = event.target.innerText.trim();
+    switch (action) {
+      case 'ride':
+        this.startRide();
+        break;
+      case 'pause':
+        this.cancelRide();
+        this.selectNextWaypoint();
+        break;
+      case 'restart':
+        this.resetWaypoint();
+        break;
+      case 'forward':
+        this.cancelRide();
+        this.selectNextWaypoint();
+        break;
+      case 'back':
+        this.cancelRide();
+        this.selectPreviousWaypoint();
+        break;
+      default:
+        break;
+    }
   }
 
   startRide() {
@@ -245,16 +316,15 @@ export default class extends Controller {
       this.rideInterval = this.rideInterval / 2;
       return;
     }
-    console.log('setting ride interval to default');
+
     this.rideInterval = baseRideInterval;
     this.ride();
   }
 
   ride() {
     this.rideInterval ||= baseRideInterval;
-    console.log(this.rideInterval);
-    this.nextWaypoint();
     this.rideTimeout = setTimeout(this.ride.bind(this), this.rideInterval);
+    this.selectNextWaypoint();
   }
 
   clearRideTimeout() {
@@ -271,30 +341,64 @@ export default class extends Controller {
     return !!this.rideTimeout;
   }
 
-  nextWaypoint() {
-    if(!this.currentIndex || this.currentIndex >= this.waypoints.length - 1) {
-      this.currentIndex = 1;
-    }
-
-    this.currentIndex += 1;
-    this.travelTooltip && this.travelTooltip.remove();
-    this.travelTooltip = L.tooltip({direction: "bottom"})
-      .setLatLng(L.latLng(this.waypoints[this.currentIndex].table.latitude, this.waypoints[this.currentIndex].table.longitude))
-      .setContent(this.waypointTooltipTemplate(this.waypoints[this.currentIndex]))
-      .addTo(this.map);
+  selectWaypoint(waypoint){
+    this.selectedWaypoint = waypoint;
+    this.showWaypointOverlay(waypoint);
+    this.showWaypointMarker(waypoint);
+    return waypoint;
   }
 
-  previousWaypoint() {
-    if(!this.currentIndex || this.currentIndex < 0) {
-      this.currentIndex = -1;
-    }
+  selectedWaypointIndex() {
+    return this.waypoints.indexOf(this.selectedWaypoint);
+  }
 
-    this.currentIndex -= 1;
-    this.travelTooltip && this.travelTooltip.remove();
-    this.travelTooltip = L.tooltip({direction: "bottom"})
-      .setLatLng(L.latLng(this.waypoints[this.currentIndex].table.latitude, this.waypoints[this.currentIndex].table.longitude))
-      .setContent(this.waypointTooltipTemplate(this.waypoints[this.currentIndex]))
-      .addTo(this.map);
+  nextWaypoint(){
+    return this.waypoints[this.selectedWaypointIndex() + 1] || this.selectedWaypoint;
+  }
+
+  previousWaypoint(){
+    return this.waypoints[this.selectedWaypointIndex() - 1] || this.selectedWaypoint;
+  }
+
+  selectNextWaypoint() {
+    return this.selectWaypoint(this.nextWaypoint());
+  }
+
+  selectPreviousWaypoint() {
+    return this.selectWaypoint(this.previousWaypoint());
+  }
+
+  resetWaypoint() {
+    return this.selectWaypoint(this.waypoints[0]);
+  }
+
+  showWaypointMarker(waypoint) {
+    if(!waypoint) {
+      return;
+    }
+    const iconSets = {
+      easterly: { base: 'cyclist-simple-east.png', shadow: 'cyclist-simple-shadow-east.png'},
+      westerly: { base: 'cyclist-simple-west.png', shadow: 'cyclist-simple-shadow-west.png'},
+    }
+    const iconSet = this.easterly(waypoint) ? iconSets.easterly : iconSets.westerly;
+    const icon = L.icon({
+      iconUrl: `/assets/${iconSet.base}`,
+      shadowUrl: `/assets/${iconSet.shadow}`,
+      iconAnchor: [15, 30],
+      shadowAnchor: [15, 30],
+      className: `cyclist`,
+    })
+    this.waypointMarker && this.waypointMarker.remove();
+    this.waypointMarker = L.marker(L.latLng(waypoint.table.latitude, waypoint.table.longitude), {icon: icon}).addTo(this.map);
+  }
+
+  showWaypointOverlay(waypoint) {
+    const waypointOverlay = document.getElementById('waypoint-stats');
+    waypointOverlay.innerHTML = this.waypointOverlayTemplate(waypoint);
+    if(!this.waypointOverlayInitialized) {
+      this.bindAnimationControlClicks(waypointOverlay);
+      this.waypointOverlayInitialized = true;
+    }
   }
 
   initializeMap() {
@@ -315,7 +419,7 @@ export default class extends Controller {
     this.workoutPolyline = L.polyline(this.workoutJSON.waypoints_latlng, {color: '#00ff00'}).addTo(this.map);
 
     this.workoutMarker.bindTooltip(this.workoutTooltipTemplate(this.workoutJSON));
-    this.workoutPolyline.on('mouseover', this.waypointTooltip.bind(this));
+    this.workoutPolyline.on('click', this.selectWaypointForEvent.bind(this));
     this.bindKeyStrokes();
   }
 }
