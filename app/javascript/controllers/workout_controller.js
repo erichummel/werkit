@@ -250,44 +250,65 @@ export default class extends Controller {
     });
   }
 
-  bindKeyStrokes() { // TODO DRY this up
-    document.addEventListener('keydown', (function(event) {
-      if (event.key == 'f') {
-        this.cancelRide();
-        this.nextWaypoint();
-      } else if (event.key == 'a') {
-        this.cancelRide();
-        this.previousWaypoint();
-      } else if (event.key == 'r') {
+  bindKeyStrokes() {
+    document.addEventListener('keydown', this.handleKeyStrokes.bind(this));
+  }
+
+  handleKeyStrokes(event) {
+    const key = event.key;
+    switch (key) {
+      case 'r':
         this.startRide();
-      } else if (event.key == 'p') {
+        break;
+      case 'p':
         this.cancelRide();
         this.nextWaypoint();
-      } else if (event.key == 's') {
+        break;
+      case 's':
         this.cancelRide();
         this.resetWaypoint();
-      }
-    }).bind(this));
+        break;
+      case 'f':
+        this.cancelRide();
+        this.nextWaypoint();
+        break;
+      case 'a':
+        this.cancelRide();
+        this.previousWaypoint();
+        break;
+      default:
+        break;
+    }
   }
 
   bindAnimationControlClicks(element) {
-    element.addEventListener('click', (function(event) {
-      const action = event.target.innerText.trim();
-      if (/ride/.test(action)) {
+    element.addEventListener('click', this.handleAnimationControlClicks.bind(this));
+  }
+
+  handleAnimationControlClicks(event) {
+    const action = event.target.innerText.trim();
+    switch (action) {
+      case 'ride':
         this.startRide();
-      } else if (/pause/.test(action)) {
+        break;
+      case 'pause':
         this.cancelRide();
         this.nextWaypoint();
-      } else if (/restart/.test(action)) {
+        break;
+      case 'restart':
         this.resetWaypoint();
-      } else if (/forward/.test(action)) {
+        break;
+      case 'forward':
         this.cancelRide();
         this.nextWaypoint();
-      } else if (/back/.test(action)) {
+        break;
+      case 'back':
         this.cancelRide();
         this.previousWaypoint();
-      }
-    }).bind(this));
+        break;
+      default:
+        break;
+    }
   }
 
   startRide() {
@@ -349,15 +370,15 @@ export default class extends Controller {
 
   showWaypointMarker(waypoint) {
     const iconSets = {
-      easterly: { base: 'cyclist-simple.png', shadow: 'cyclist-simple-shadow.png'},
+      easterly: { base: 'cyclist-simple-east.png', shadow: 'cyclist-simple-shadow-east.png'},
       westerly: { base: 'cyclist-simple-west.png', shadow: 'cyclist-simple-shadow-west.png'},
     }
     const iconSet = this.easterly(waypoint) ? iconSets.easterly : iconSets.westerly;
     const icon = L.icon({
       iconUrl: `/assets/${iconSet.base}`,
-      // shadowUrl: `/assets/${iconSet.shadow}`,
+      shadowUrl: `/assets/${iconSet.shadow}`,
       iconAnchor: [15, 30],
-      shadowAnchor: [12, 15],
+      shadowAnchor: [15, 30],
       className: `cyclist`,
     })
     this.waypointMarker && this.waypointMarker.remove();
