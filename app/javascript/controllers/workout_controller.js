@@ -132,7 +132,7 @@ export default class extends Controller {
   }
 
   easterly(waypoint){
-    return waypoint.table.course >= 0 && waypoint.table.course < 180;
+    return !waypoint || waypoint.table.course >= 0 && waypoint.table.course < 180;
   }
 
   inclineForWaypoint(waypoint) {
@@ -234,7 +234,7 @@ export default class extends Controller {
     }).bind(this), 0);
   }
 
-  waypointTooltipForEvent(event) {
+  selectWaypointForEvent(event) {
     const waypoint = this.findWaypoint(event.latlng, this.waypoints);
     const oppositeWaypoint = this.findOppositeWaypoint(waypoint, this.waypoints);
     const waypointTooltipContents = this.waypointOverlayTemplate(waypoint) + this.waypointOverlayTemplate(oppositeWaypoint);
@@ -262,7 +262,7 @@ export default class extends Controller {
         break;
       case 'p':
         this.cancelRide();
-        this.nextWaypoint();
+        this.selectNextWaypoint();
         break;
       case 's':
         this.cancelRide();
@@ -270,11 +270,11 @@ export default class extends Controller {
         break;
       case 'f':
         this.cancelRide();
-        this.nextWaypoint();
+        this.selectNextWaypoint();
         break;
       case 'a':
         this.cancelRide();
-        this.previousWaypoint();
+        this.selectPreviousWaypoint();
         break;
       default:
         break;
@@ -293,18 +293,18 @@ export default class extends Controller {
         break;
       case 'pause':
         this.cancelRide();
-        this.nextWaypoint();
+        this.selectNextWaypoint();
         break;
       case 'restart':
         this.resetWaypoint();
         break;
       case 'forward':
         this.cancelRide();
-        this.nextWaypoint();
+        this.selectNextWaypoint();
         break;
       case 'back':
         this.cancelRide();
-        this.previousWaypoint();
+        this.selectPreviousWaypoint();
         break;
       default:
         break;
@@ -324,7 +324,7 @@ export default class extends Controller {
   ride() {
     this.rideInterval ||= baseRideInterval;
     this.rideTimeout = setTimeout(this.ride.bind(this), this.rideInterval);
-    this.nextWaypoint();
+    this.selectNextWaypoint();
   }
 
   clearRideTimeout() {
@@ -341,34 +341,41 @@ export default class extends Controller {
     return !!this.rideTimeout;
   }
 
-  nextWaypoint() {
-    if(!this.currentIndex || this.currentIndex >= this.waypoints.length - 1) {
-      this.currentIndex = 1;
-    }
-
-    const waypoint = this.waypoints[this.currentIndex += 1];
+  selectWaypoint(waypoint){
+    this.selectedWaypoint = waypoint;
     this.showWaypointOverlay(waypoint);
     this.showWaypointMarker(waypoint);
+    return waypoint;
   }
 
-  previousWaypoint() {
-    if(!this.currentIndex || this.currentIndex < 0) {
-      this.currentIndex = -1;
-    }
+  selectedWaypointIndex() {
+    return this.waypoints.indexOf(this.selectedWaypoint);
+  }
 
-    const waypoint = this.waypoints[this.currentIndex -= 1];
-    this.showWaypointOverlay(waypoint);
-    this.showWaypointMarker(waypoint);
+  nextWaypoint(){
+    return this.waypoints[this.selectedWaypointIndex() + 1] || this.selectedWaypoint;
+  }
+
+  previousWaypoint(){
+    return this.waypoints[this.selectedWaypointIndex() - 1] || this.selectedWaypoint;
+  }
+
+  selectNextWaypoint() {
+    return this.selectWaypoint(this.nextWaypoint());
+  }
+
+  selectPreviousWaypoint() {
+    return this.selectWaypoint(this.previousWaypoint());
   }
 
   resetWaypoint() {
-    this.currentIndex = 0;
-    const waypoint = this.waypoints[this.currentIndex];
-    this.showWaypointOverlay(waypoint);
-    this.showWaypointMarker(waypoint);
+    return this.selectWaypoint(this.waypoints[0]);
   }
 
   showWaypointMarker(waypoint) {
+    if(!waypoint) {
+      return;
+    }
     const iconSets = {
       easterly: { base: 'cyclist-simple-east.png', shadow: 'cyclist-simple-shadow-east.png'},
       westerly: { base: 'cyclist-simple-west.png', shadow: 'cyclist-simple-shadow-west.png'},
@@ -412,7 +419,7 @@ export default class extends Controller {
     this.workoutPolyline = L.polyline(this.workoutJSON.waypoints_latlng, {color: '#00ff00'}).addTo(this.map);
 
     this.workoutMarker.bindTooltip(this.workoutTooltipTemplate(this.workoutJSON));
-    this.workoutPolyline.on('click', this.waypointTooltipForEvent.bind(this));
+    this.workoutPolyline.on('click', this.selectWaypointForEvent.bind(this));
     this.bindKeyStrokes();
   }
 }
