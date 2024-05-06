@@ -86,9 +86,14 @@ class Workout < ApplicationRecord
   end
 
   def as_json(options = {})
+    waypoints_attributes = if (options[:include_waypoints])
+      { waypoints: waypoints,
+        waypoints_latlng: waypoints_latlng, }
+    else
+      {}
+    end
+
     super.merge({
-      waypoints: waypoints,
-      waypoints_latlng: waypoints_latlng,
       bounding_box: bounding_box,
       start: start,
       finish: finish,
@@ -102,6 +107,6 @@ class Workout < ApplicationRecord
       min_speed: min_speed,
       distance: distance,
       duration: duration,
-    })
+    }).merge(waypoints_attributes)
   end
 end

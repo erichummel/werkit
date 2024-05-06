@@ -2,6 +2,12 @@ import { Controller } from "@hotwired/stimulus"
 const baseRideInterval = 1000;
 
 export default class extends Controller {
+  static values = {
+    workouts: Array,
+    url: String,
+    foo: String,
+  }
+
   mph(mps) {
     const mphConversionFactor = 2.23694;
     return mps * mphConversionFactor;
@@ -401,10 +407,9 @@ export default class extends Controller {
     }
   }
 
-  initializeMap() {
-    this.workoutJSON = window.workoutJSON; // TODO there's gotta be a more railsy way to pass this json up to the javascript controller
+  initializeMap(workout) {
     const mapContainer = document.getElementById('workout-map');
-    this.map = L.map(mapContainer).setView(this.workoutJSON.middle_point, 13);
+    this.map = L.map(mapContainer).setView(workout.middle_point, 13);
     const resizeObserver = new ResizeObserver(() => {
       this.map.invalidateSize();
     });
@@ -414,12 +419,36 @@ export default class extends Controller {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(this.map);
 
-    this.workoutMarker = L.marker(this.workoutJSON.middle_point).addTo(this.map);
-    this.waypoints = this.workoutJSON.waypoints;
-    this.workoutPolyline = L.polyline(this.workoutJSON.waypoints_latlng, {color: '#00ff00'}).addTo(this.map);
+    this.workoutMarker = L.marker(workout.middle_point).addTo(this.map);
+    this.waypoints = workout.waypoints;
+    this.workoutPolyline = L.polyline(workout.waypoints_latlng, {color: '#00ff00'}).addTo(this.map);
 
-    this.workoutMarker.bindTooltip(this.workoutTooltipTemplate(this.workoutJSON));
+    this.workoutMarker.bindTooltip(this.workoutTooltipTemplate(workout));
     this.workoutPolyline.on('click', this.selectWaypointForEvent.bind(this));
     this.bindKeyStrokes();
+  }
+
+  fetchWorkout(workout) {
+    fetch(`/workouts/${workout.id}.json`).
+    then(response => response.json()).
+    then(workout => {
+      this.initializeMap(workout);
+    });
+  }
+
+  fetchWorkouts() {
+    fetch(this.urlValue).
+    then(response => response.json()).
+    then(data => {
+      this.workoutsValue = data;
+      this.fetchWorkout(this.workoutsValue[0]);
+    })
+  }
+
+  connect() {
+    window.werker = this;
+    if(this.hasUrlValue) {
+      this.fetchWorkouts();
+    };
   }
 }

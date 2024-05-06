@@ -1,2 +1,2 @@
-json.extract! workout, :id, :created_at, :updated_at
+json.merge! workout.as_json(include_waypoints: @include_waypoints)
 json.url workout_url(workout, format: :json)

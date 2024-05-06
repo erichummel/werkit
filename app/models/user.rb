@@ -1,6 +1,5 @@
 class User < ApplicationRecord
   has_secure_password
-  has_many :workouts, dependent: :destroy
 
   generates_token_for :email_verification, expires_in: 2.days do
     email
@@ -8,7 +7,6 @@ class User < ApplicationRecord
   generates_token_for :password_reset, expires_in: 20.minutes do
     password_salt.last(10)
   end
-
 
   has_many :sessions, dependent: :destroy
   has_many :sign_in_tokens, dependent: :destroy
@@ -25,4 +23,11 @@ class User < ApplicationRecord
   after_update if: :password_digest_previously_changed? do
     sessions.where.not(id: Current.session).delete_all
   end
+
+  has_many :workouts, dependent: :destroy
+
+  def recent_workouts
+    workouts.order(created_at: :desc).limit(5)
+  end
+
 end
