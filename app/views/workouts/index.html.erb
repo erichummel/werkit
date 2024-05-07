@@ -1,5 +1,10 @@
 <main class='index-container' data-controller="workout" data-workout-url-value="<%= workouts_path(format: :json) %>">
   <div class='map' id="workout-map">
+    <div class='overlay' id='workouts'>
+      <div class='workouts'>
+        <%= render partial: 'workout', collection: @workouts, as: :workout %>
+      </div>
+    </div>
     <div class='overlay' id='workout-stats'>
     </div>
     <div class='overlay' id='waypoint-stats'>

@@ -428,6 +428,10 @@ export default class extends Controller {
     this.bindKeyStrokes();
   }
 
+  toggleSelected(e){
+    console.log(e.target, arguments);
+  }
+
   fetchWorkout(workout) {
     fetch(`/workouts/${workout.id}.json`).
     then(response => response.json()).

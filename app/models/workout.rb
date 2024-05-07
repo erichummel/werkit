@@ -55,6 +55,14 @@ class Workout < ApplicationRecord
     ]
   end
 
+  def start_time
+    Time.parse(base["start"])
+  end
+
+  def end_time
+    Time.parse(base["end"])
+  end
+
   def start
     point = waypoints.first
     [point.latitude, point.longitude]
@@ -97,6 +105,8 @@ class Workout < ApplicationRecord
       bounding_box: bounding_box,
       start: start,
       finish: finish,
+      start_time: start_time,
+      end_time: end_time,
       middle_point: middle_point,
       max_latitude: max_latitude,
       min_latitude: min_latitude,
