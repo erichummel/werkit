@@ -251,9 +251,9 @@ export default class extends Controller {
       .setContent(waypointTooltipContents)
       .addTo(this.map);
 
-    this.map.on('click', function() {
+    this.map.on('click', (function() {
       this.waypointTooltip.remove();
-    });
+    }).bind(this));
   }
 
   bindKeyStrokes() {
@@ -429,7 +429,8 @@ export default class extends Controller {
   }
 
   toggleSelected(e){
-    console.log(e.target, arguments);
+    console.log(e, arguments);
+    debugger;
   }
 
   fetchWorkout(workout) {

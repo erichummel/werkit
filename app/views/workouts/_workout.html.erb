@@ -1,10 +1,10 @@
 <div id="<%= dom_id workout %>" class='workout' data-controller='workout' data-selected="false" data-action="click->workout#toggleSelected">
   <div class='info'>
-    <span class='timestamp'><%= workout.start_time.strftime('%-m/%-d/%y %-I:%M%P') %></span>
-    <span class='duration'><%= Time.at(workout.duration).utc.strftime('%-Hh:%Mm:%Ss') %></span>
-    <span class='distance'><%= workout.distance %></span>
+    <div class='timestamp'><%= workout.start_time.strftime('%-m/%-d/%y @%-I:%M%P') %></div>
+    <div class='duration'><%= Time.at(workout.duration).utc.strftime('%-Hh:%Mm:%Ss') %></div>
+    <div class='distance'><%= workout.distance %></div>
   </div>
-  <div>
+  <div class='controls'>
     <%= link_to '✏️', edit_workout_path(workout) %>
     <%= link_to '🗑️', workout, method: :delete, data: { confirm: 'Are you sure?' } %>
   </div>
