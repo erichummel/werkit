@@ -420,7 +420,6 @@ export default class extends Controller {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(this.map);
 
-    this.workoutMarker = L.marker(workout.middle_point).addTo(this.map);
     this.waypoints = workout.waypoints;
     this.workoutPolyline = L.polyline(workout.waypoints_latlng, {color: '#00ff00'}).addTo(this.map);
 
@@ -461,19 +460,10 @@ export default class extends Controller {
     });
   }
 
-  initialize() {
-    console.log("initialized", this);
-  }
-
   connect() {
-    console.log("connected", this);
     window.werker = this;
     if(this.hasUrlValue) {
       this.fetchWorkouts();
     };
-  }
-
-  disconnect() {
-    console.log("disconnected", this);
   }
 }
