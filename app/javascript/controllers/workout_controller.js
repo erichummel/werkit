@@ -4,6 +4,7 @@ const baseRideInterval = 1000;
 export default class extends Controller {
   static values = {
     workouts: Array,
+    loadedWorkouts: Object,
     url: String,
     foo: String,
   }
@@ -429,14 +430,24 @@ export default class extends Controller {
   }
 
   toggleSelected(e){
-    console.log(e, arguments);
-    debugger;
+    const workoutEl = e.target.closest("div.workout");
+    const workoutID = workoutEl.dataset.id;
+    this.workoutsValue.find((workout) => {
+      if(workout.id == workoutID && !this.loadedWorkoutsValue[workoutID]){
+        this.fetchWorkout(workout);
+        return true
+      }else if (workout.id == workoutID){
+        this.initializeMap(this.loadedWorkoutsValue[workoutID]);
+        return true;
+      }
+    });
   }
 
   fetchWorkout(workout) {
     fetch(`/workouts/${workout.id}.json`).
     then(response => response.json()).
     then(workout => {
+      this.loadedWorkoutsValue[workout.id] = workout;
       this.initializeMap(workout);
     });
   }
@@ -447,13 +458,22 @@ export default class extends Controller {
     then(data => {
       this.workoutsValue = data;
       this.fetchWorkout(this.workoutsValue[0]);
-    })
+    });
+  }
+
+  initialize() {
+    console.log("initialized", this);
   }
 
   connect() {
+    console.log("connected", this);
     window.werker = this;
     if(this.hasUrlValue) {
       this.fetchWorkouts();
     };
+  }
+
+  disconnect() {
+    console.log("disconnected", this);
   }
 }
