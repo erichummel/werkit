@@ -1,6 +1,8 @@
 class Workout < ApplicationRecord
   has_one_attached :data_file
   belongs_to :user
+  OUTBACK_LATITUDE = -25.751525
+  OUTBACK_LONGITUDE = 134.1065540
 
   attr_accessor :anonymize
 
@@ -104,6 +106,7 @@ class Workout < ApplicationRecord
 
   def anonymize!(latitude = 0, longitude = 0)
     start_latitude, start_longitude = start
+
     lat_delta = latitude.abs - start_latitude.abs
     long_delta = longitude.abs - start_longitude.abs
 
