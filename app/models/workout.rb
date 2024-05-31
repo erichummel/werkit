@@ -1,6 +1,8 @@
 class Workout < ApplicationRecord
   has_one_attached :data_file
   belongs_to :user
+  OUTBACK_LATITUDE = -25.751525
+  OUTBACK_LONGITUDE = 134.1065540
 
   def base
     parsed_data["workouts"].first
@@ -31,10 +33,6 @@ class Workout < ApplicationRecord
   end
 
   def distance
-    # good job copilot but we've got the data already
-    # waypoints.each_cons(2).map do |waypoint, next_waypoint|
-    #   Geocoder::Calculations.distance_between([waypoint.latitude, waypoint.longitude], [next_waypoint.latitude, next_waypoint.longitude])
-    # end.sum
     "#{base["distance"]["qty"].round(2)} #{base["distance"]["units"]}"
   end
 
@@ -93,6 +91,17 @@ class Workout < ApplicationRecord
     waypoints.map{|waypoint| waypoint["longitude"]}.min
   end
 
+  def anonymize!(latitude = 0, longitude = 0)
+    start_latitude, start_longitude = start
+    lat_delta = latitude - start_latitude
+    long_delta = longitude - start_longitude
+
+    waypoints.each do |waypoint|
+      waypoint["latitude"] += lat_delta
+      waypoint["longitude"] += long_delta
+    end
+  end
+
   def as_json(options = {})
     waypoints_attributes = if (options[:include_waypoints])
       { waypoints: waypoints,
@@ -118,5 +127,9 @@ class Workout < ApplicationRecord
       distance: distance,
       duration: duration,
     }).merge(waypoints_attributes)
+  end
+
+  def self.haversine_distance(point1, point2)
+    Geocoder::Calculations.distance_between(point1, point2)
   end
 end
