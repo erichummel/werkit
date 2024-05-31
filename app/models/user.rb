@@ -27,7 +27,7 @@ class User < ApplicationRecord
   has_many :workouts, dependent: :destroy
 
   def recent_workouts
-    workouts.order(created_at: :desc).limit(5)
+    workouts.order(started_at: :desc).limit(5)
   end
 
 end
