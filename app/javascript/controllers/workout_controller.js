@@ -423,7 +423,6 @@ export default class extends Controller {
     this.waypoints = workout.waypoints;
     this.workoutPolyline = L.polyline(workout.waypoints_latlng, {color: '#00ff00'}).addTo(this.map);
 
-    this.workoutMarker.bindTooltip(this.workoutTooltipTemplate(workout));
     this.workoutPolyline.on('click', this.selectWaypointForEvent.bind(this));
     this.bindKeyStrokes();
   }
