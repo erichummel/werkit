@@ -2,6 +2,7 @@
   <div class='map' id="workout-map">
     <div class='overlay' id='workouts'>
       <div class='workouts'>
+        <%= render partial: 'new_workout_button' %>
         <%= render partial: 'workout', collection: @workouts, as: :workout %>
       </div>
     </div>

@@ -13,7 +13,7 @@ class WorkoutsController < ApplicationController
 
   # GET /workouts/new
   def new
-    @workout = Workout.new
+    @workout = Workout.new(user: Current.user)
   end
 
   # GET /workouts/1/edit
