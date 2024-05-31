@@ -1,46 +1,15 @@
-<div id="<%= dom_id workout %>" class='workout' data-controller='workout'>
-  <div>
-    <strong>User:</strong>
-    <%= workout.user.email %>
+<div id="<%= dom_id workout %>"
+    data-id="<%= workout.id %>"
+    class='workout'
+    data-selected="false"
+    data-action="click->workout#toggleSelected">
+  <div class='info'>
+    <div class='timestamp'><%= workout.start_time.strftime('%-m/%-d/%y @%-I:%M%P') %></div>
+    <div class='duration'><%= Time.at(workout.duration).utc.strftime('%-Hh:%Mm:%Ss') %></div>
+    <div class='distance'><%= workout.distance %></div>
   </div>
-
-  <div>
-    <strong>Data file:</strong>
-    <%=
-    begin
-      link_to workout.data_file.name, rails_blob_path(workout.data_file)
-    rescue Exception => e
-      binding.pry
-    end
-    %>
+  <div class='controls'>
+    <%= link_to '✏️', edit_workout_path(workout) %>
+    <%= link_to '🗑️', workout, method: :delete, data: { confirm: 'Are you sure?' } %>
   </div>
-
-  <div>
-    <strong>Created at:</strong>
-    <%= workout.created_at %>
-  </div>
-
-  <div>
-    <strong>Updated at:</strong>
-    <%= workout.updated_at %>
-  </div>
-
-  <div>
-    <%= link_to 'Show', workout %>
-    <%= link_to 'Edit', edit_workout_path(workout) %>
-    <%= link_to 'Destroy', workout, method: :delete, data: { confirm: 'Are you sure?' } %>
-  </div>
-
-  <% if include_map %>
-    <div class='map' id="workout-map" data-action="turbo:load@document->workout#initializeMap">
-      <div class='overlay' id='workout-stats'>
-      </div>
-      <div class='overlay' id='waypoint-stats'>
-      </div>
-    </div>
-  <% end %>
 </div>
-
-<%= javascript_tag do %>
-  window.workoutJSON = <%= raw workout.to_json %>;
-<% end %>
