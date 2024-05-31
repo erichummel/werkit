@@ -1,8 +1,40 @@
-div.workout div.map {
-  height: 800px;
-  width: 1200px;
+main.index-container div.map {
+  height: 1000px;
+  width: 100%;
   resize: both;
   overflow: auto;
+}
+
+div#workouts {
+  position:absolute;
+  z-index: 1000;
+  margin-top: 75px;
+}
+
+div#workouts .workout {
+  width: 300px;
+  margin: 5px;
+  padding: 10px;
+  background-color: rgba(255,255,255,0.8);
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+div#workouts .workout .info {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+}
+
+div#workouts .workout .info div {
+  flex-grow: 1;
+}
+
+div#workouts .workout:hover {
+  background-color: rgba(0, 21, 143, 0.4);
+  cursor: pointer;
 }
 
 div#waypoint-stats {

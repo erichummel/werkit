@@ -55,6 +55,14 @@ class Workout < ApplicationRecord
     ]
   end
 
+  def start_time
+    Time.parse(base["start"])
+  end
+
+  def end_time
+    Time.parse(base["end"])
+  end
+
   def start
     point = waypoints.first
     [point.latitude, point.longitude]
@@ -86,12 +94,19 @@ class Workout < ApplicationRecord
   end
 
   def as_json(options = {})
+    waypoints_attributes = if (options[:include_waypoints])
+      { waypoints: waypoints,
+        waypoints_latlng: waypoints_latlng, }
+    else
+      {}
+    end
+
     super.merge({
-      waypoints: waypoints,
-      waypoints_latlng: waypoints_latlng,
       bounding_box: bounding_box,
       start: start,
       finish: finish,
+      start_time: start_time,
+      end_time: end_time,
       middle_point: middle_point,
       max_latitude: max_latitude,
       min_latitude: min_latitude,
@@ -102,6 +117,6 @@ class Workout < ApplicationRecord
       min_speed: min_speed,
       distance: distance,
       duration: duration,
-    })
+    }).merge(waypoints_attributes)
   end
 end
