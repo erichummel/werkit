@@ -2,6 +2,15 @@ class Workout < ApplicationRecord
   has_one_attached :data_file
   belongs_to :user
 
+  attr_accessor :anonymize
+
+  # TODO: there's a lot of presentation logic in this model. something should be done about that
+
+  OUTBACK_LATITUDE = -25.751525
+  OUTBACK_LONGITUDE = 134.1065540
+  EVEREST_LATITUDE = 27.98789
+  EVEREST_LONGITUDE = 86.92502
+
   def base
     parsed_data["workouts"].first
   end
@@ -31,10 +40,6 @@ class Workout < ApplicationRecord
   end
 
   def distance
-    # good job copilot but we've got the data already
-    # waypoints.each_cons(2).map do |waypoint, next_waypoint|
-    #   Geocoder::Calculations.distance_between([waypoint.latitude, waypoint.longitude], [next_waypoint.latitude, next_waypoint.longitude])
-    # end.sum
     "#{base["distance"]["qty"].round(2)} #{base["distance"]["units"]}"
   end
 
@@ -43,7 +48,11 @@ class Workout < ApplicationRecord
   end
 
   def parsed_data
-    @parsed_data ||= JSON.parse(data_file.download)["data"]
+    @parsed_data ||= parsed_file["data"]
+  end
+
+  def parsed_file
+    JSON.parse(data_file.download)
   end
 
   def bounding_box
@@ -93,6 +102,27 @@ class Workout < ApplicationRecord
     waypoints.map{|waypoint| waypoint["longitude"]}.min
   end
 
+  def anonymize!(latitude = 0, longitude = 0)
+    start_latitude, start_longitude = start
+    lat_delta = latitude.abs - start_latitude.abs
+    long_delta = longitude.abs - start_longitude.abs
+
+    anonymized_file = parsed_file.dup
+    anonymized_file["data"]["workouts"].first["route"].each do |waypoint|
+      waypoint["latitude"] += waypoint["latitude"] > 0 ? lat_delta : -lat_delta
+      waypoint["longitude"] += waypoint["longitude"] > 0 ? long_delta : -long_delta
+    end
+
+    filename = data_file.filename
+    data_file.purge
+    data_file.attach(
+      io: StringIO.new(anonymized_file.to_json),
+      filename: filename,
+      content_type: "application/octet-stream",
+    )
+    save!
+  end
+
   def as_json(options = {})
     waypoints_attributes = if (options[:include_waypoints])
       { waypoints: waypoints,
@@ -118,5 +148,9 @@ class Workout < ApplicationRecord
       distance: distance,
       duration: duration,
     }).merge(waypoints_attributes)
+  end
+
+  def self.haversine_distance(point1, point2)
+    Geocoder::Calculations.distance_between(point1, point2)
   end
 end
