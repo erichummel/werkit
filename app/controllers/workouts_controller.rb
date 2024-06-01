@@ -64,7 +64,6 @@ class WorkoutsController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_workout
       @workout = params[:id] ? Workout.find(params[:id]) : Workout.new
-      @workout.anonymize!(0, 0) if @workout.data_file.attached?
     end
 
     # Only allow a list of trusted parameters through.

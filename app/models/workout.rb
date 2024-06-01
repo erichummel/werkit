@@ -1,8 +1,15 @@
 class Workout < ApplicationRecord
   has_one_attached :data_file
   belongs_to :user
+
+  attr_accessor :anonymize
+
+  # TODO: there's a lot of presentation logic in this model. something should be done about that
+
   OUTBACK_LATITUDE = -25.751525
   OUTBACK_LONGITUDE = 134.1065540
+  EVEREST_LATITUDE = 27.98789
+  EVEREST_LONGITUDE = 86.92502
 
   attr_accessor :anonymize
 
@@ -106,7 +113,6 @@ class Workout < ApplicationRecord
 
   def anonymize!(latitude = 0, longitude = 0)
     start_latitude, start_longitude = start
-
     lat_delta = latitude.abs - start_latitude.abs
     long_delta = longitude.abs - start_longitude.abs
 
