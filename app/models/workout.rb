@@ -13,15 +13,6 @@ class Workout < ApplicationRecord
   EVEREST_LATITUDE = 27.98789
   EVEREST_LONGITUDE = 86.92502
 
-  attr_accessor :anonymize
-
-  # TODO: there's a lot of presentation logic in this model. something should be done about that
-
-  OUTBACK_LATITUDE = -25.751525
-  OUTBACK_LONGITUDE = 134.1065540
-  EVEREST_LATITUDE = 27.98789
-  EVEREST_LONGITUDE = 86.92502
-
   def self.haversine_distance(point1, point2)
     Geocoder::Calculations.distance_between(point1, point2)
   end
