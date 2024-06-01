@@ -1,6 +1,6 @@
 # README
 
-Werkit is a toy project I put together to track my cycling workouts. I don't have it hosted anywhere (I just run it on my machine), but maybe someday I will push it live. At the moment it doesn't do much beyond allowing you to create accounts and upload workouts (I use the Health Auto Export app to extract JSON workout files from my iPhone), then admire them on a map so you can see things like instananeous velocity, incline, heart rate, etc.
+Werkit is a side project I put together to track my bike rides. Mostly I just wanted to be able to see how fast I was going at an arbitrary point in the ride and couldn't find an easy way to do that from the apple workouts UI. I don't have it hosted anywhere (I just run it on my machine), but maybe someday I will push it live. At the moment it doesn't do much beyond allowing you to create accounts and upload workouts (I use the Health Auto Export app to extract JSON workout files from my iPhone), then admire them on a map so you can see things like velocity, incline, heart rate, etc.
 
 Future features I have planned include things like route planning, "races" (you click a button and the little stick-figure you races other stick-figure yous on a given route), an improved UI, and ultimately in 10 years it'll have feature parity with Strava (an app I've never used but I hear it does things like this 😜).
 
