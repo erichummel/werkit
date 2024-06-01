@@ -1,4 +1,4 @@
 workout_data_file:
-  name: cycle_workout.json
+  name: cycling_workout.json
   record: one (Workout)
-  blob: cycle_workout
+  blob: cycling_workout

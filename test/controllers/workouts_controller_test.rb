@@ -22,7 +22,7 @@ class WorkoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "should create workout" do
     assert_difference("Workout.count") do
-      data_file = fixture_file_upload('cycle_workout.json', 'application/octet-stream')
+      data_file = fixture_file_upload('cycling_workout.json', 'application/octet-stream')
       post workouts_url, params: { workout: { data_file: data_file, user_id: @user.id } }
     end
 
