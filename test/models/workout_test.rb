@@ -36,7 +36,10 @@ class WorkoutTest < ActiveSupport::TestCase
     assert_not_equal([0, -0.0002697073881], workout.finish)
 
     sample_waypoint = workout.waypoints.sample
-    assert_greater_than(Workout.haversine_distance(sample_waypoint.latitude, sample_waypoint.longitude, 0, 0), 1000)
+    assert_operator(
+      Workout.haversine_distance([sample_waypoint.latitude, sample_waypoint.longitude], [0, 0]),
+      :>,
+      1000)
   end
 
   test "haversine distance" do
