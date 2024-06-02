@@ -9,7 +9,6 @@ class WorkoutTest < ActiveSupport::TestCase
 
   test "sets started_at and ended_at from the data file" do
     workout = workouts(:one)
-    # binding.pry
     workout.data_file.attach(
       io: File.open(Rails.root.join("test", "fixtures", "files", "cycling_workout.json")),
       filename: "cycling_workout.json",
@@ -42,9 +41,10 @@ class WorkoutTest < ActiveSupport::TestCase
 
   test "anonymizes a workout" do
     workout = workouts(:one)
+
     workout.data_file.attach(io: File.open(Rails.root.join("test", "fixtures", "files", "cycling_workout.json")), filename: "cycling_workout.json")
     workout.anonymize!(Workout::OUTBACK_LATITUDE, Workout::OUTBACK_LONGITUDE)
-
+    workout = Workout.find(workout.id)
     assert_not_equal([0, 0], workout.start)
     assert_not_equal([0, -0.0002697073881], workout.finish)
 

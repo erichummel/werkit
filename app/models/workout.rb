@@ -54,7 +54,8 @@ class Workout < ApplicationRecord
   end
 
   def parsed_data
-    @parsed_data ||= parsed_file["data"]
+    # @parsed_data ||= parsed_file["data"]
+    parsed_file["data"]
   end
 
   def parsed_file
