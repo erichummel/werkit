@@ -4,12 +4,18 @@ class Workout < ApplicationRecord
 
   attr_accessor :anonymize
 
+  after_commit :set_started_at_and_ended_at, on: [:create, :update]
+
   # TODO: there's a lot of presentation logic in this model. something should be done about that
 
   OUTBACK_LATITUDE = -25.751525
   OUTBACK_LONGITUDE = 134.1065540
   EVEREST_LATITUDE = 27.98789
   EVEREST_LONGITUDE = 86.92502
+
+  def self.haversine_distance(point1, point2)
+    Geocoder::Calculations.distance_between(point1, point2)
+  end
 
   def base
     parsed_data["workouts"].first
@@ -48,10 +54,12 @@ class Workout < ApplicationRecord
   end
 
   def parsed_data
-    @parsed_data ||= parsed_file["data"]
+    # @parsed_data ||= parsed_file["data"]
+    parsed_file["data"]
   end
 
   def parsed_file
+    return {} unless data_file.attached?
     JSON.parse(data_file.download)
   end
 
@@ -150,7 +158,11 @@ class Workout < ApplicationRecord
     }).merge(waypoints_attributes)
   end
 
-  def self.haversine_distance(point1, point2)
-    Geocoder::Calculations.distance_between(point1, point2)
+  private
+
+  def set_started_at_and_ended_at
+    return true unless data_file.attached?
+    self.started_at = start_time
+    self.ended_at = end_time
   end
 end
