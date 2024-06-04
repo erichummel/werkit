@@ -9,3 +9,7 @@ It's built in stock Rails and it doesn't do anything fancy. I do intend to migra
 No warranty express or implied, etc., maybe someone can find it useful as a quick reference for implementing OpenStreetMap in a project. If you do find a use for it (or even somehow stumble upon this project for some reason) let me know! Pull requests welcome, no promises I'll merge them in, though. Leave an issue if you actually spin this up and have a problem with something; I'd be thrilled to read it, at the very least 😇.
 
 # The UI
+
+Here's a quick screencap of the UI in action (like I said, it doesn't do much)
+
+[![Click to play](https://github.com/erichummel/werkit/blob/tweaks/public/videos/ui_screenshot.png)](https://github.com/erichummel/werkit/blob/tweaks/public/videos/ui_recording_720p.mov)
