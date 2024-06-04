@@ -10,6 +10,6 @@ No warranty express or implied, etc., maybe someone can find it useful as a quic
 
 # The UI
 
-Here's a quick screencap of the UI in action (like I said, it doesn't do much)
+Here's a quick screencap of the UI in action, the letters in green are keyboard shortcuts (like I said, it doesn't do much)
 
-[![Click to play](https://github.com/erichummel/werkit/blob/tweaks/public/videos/ui_screenshot.png)](https://github.com/erichummel/werkit/blob/tweaks/public/videos/ui_recording_720p.mov)
+[![Click to play](https://github.com/erichummel/werkit/blob/tweaks/public/videos/ui_screenshot.png)](https://github.com/erichummel/werkit/assets/51916/a6ae31a1-f7c1-401b-815b-0aeee25bd2aa)
