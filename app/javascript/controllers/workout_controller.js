@@ -23,7 +23,9 @@ export default class extends Controller {
   }
 
   timestampForWaypoint(waypoint) {
-    return Date.parse(waypoint.table.timestamp);
+    const timestampString = waypoint.table.timestamp;
+    const withoutTimeZone = timestampString.replace(/\s+[-+]\d+$/, '');
+    return (new Date(withoutTimeZone).getTime());
   }
 
   closeInSpace(waypoint1, waypoint2) {
