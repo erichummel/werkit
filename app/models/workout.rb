@@ -1,12 +1,12 @@
 class Workout < ApplicationRecord
+  before_save :set_started_at_and_ended_at
+
   has_one_attached :data_file
   belongs_to :user
 
   attr_accessor :anonymize
 
-  after_commit :set_started_at_and_ended_at, on: [:create, :update]
-
-  # TODO: there's a lot of presentation logic in this model. something should be done about that
+  # TODO: there's a lot of presentation logic in this model. someone should do something about that
 
   OUTBACK_LATITUDE = -25.751525
   OUTBACK_LONGITUDE = 134.1065540
@@ -18,6 +18,7 @@ class Workout < ApplicationRecord
   end
 
   def base
+    return {} unless data_file.attached?
     parsed_data["workouts"].first
   end
 

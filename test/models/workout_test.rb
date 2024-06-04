@@ -1,20 +1,22 @@
 require "test_helper"
 
 class WorkoutTest < ActiveSupport::TestCase
+  self.use_transactional_tests = false
+
   test "parses uploaded data files" do
     workout = workouts(:one)
     workout.data_file.attach(io: File.open(Rails.root.join("test", "fixtures", "files", "cycling_workout.json")), filename: "cycling_workout.json")
     assert_equal(10, workout.waypoints.size)
   end
 
-  test "sets started_at and ended_at from the data file" do
-    workout = workouts(:one)
+  test "sets started_at and ended_at from the data file on creation" do
+    workout = Workout.new(user: users(:one))
     workout.data_file.attach(
       io: File.open(Rails.root.join("test", "fixtures", "files", "cycling_workout.json")),
-      filename: "cycling_workout.json",
-      content_type: "application/json",
-      identify: false)
+      filename: "cycling_workout.json")
 
+
+    assert(workout.save!)
     assert_equal("2024-04-27 17:53:50 UTC", workout.started_at.to_s)
     assert_equal("2024-04-27 18:49:36 UTC", workout.ended_at.to_s)
   end
