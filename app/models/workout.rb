@@ -1,5 +1,5 @@
 class Workout < ApplicationRecord
-  before_save :set_started_at_and_ended_at
+  after_commit :set_started_at_and_ended_at, if: :data_file_analyzed?, on: [:create, :update]
 
   has_one_attached :data_file
   belongs_to :user
@@ -13,12 +13,17 @@ class Workout < ApplicationRecord
   EVEREST_LATITUDE = 27.98789
   EVEREST_LONGITUDE = 86.92502
 
+  BLANK_DATA_FILE = {
+    "data" => {
+      "workouts" => [{}]
+    },
+  }
+
   def self.haversine_distance(point1, point2)
     Geocoder::Calculations.distance_between(point1, point2)
   end
 
   def base
-    return {} unless data_file.attached?
     parsed_data["workouts"].first
   end
 
@@ -55,13 +60,15 @@ class Workout < ApplicationRecord
   end
 
   def parsed_data
-    # @parsed_data ||= parsed_file["data"]
-    parsed_file["data"]
+    @parsed_data ||= parsed_file["data"]
   end
 
   def parsed_file
-    return {} unless data_file.attached?
+    return BLANK_DATA_FILE unless data_file.attached?
     JSON.parse(data_file.download)
+  rescue ActiveStorage::FileNotFoundError => e
+    # TODO: log this
+    return BLANK_DATA_FILE
   end
 
   def bounding_box
@@ -74,10 +81,12 @@ class Workout < ApplicationRecord
   end
 
   def start_time
+    return Time.now unless base["start"]
     Time.parse(base["start"])
   end
 
   def end_time
+    return Time.now unless base["end"]
     Time.parse(base["end"])
   end
 
@@ -162,8 +171,14 @@ class Workout < ApplicationRecord
   private
 
   def set_started_at_and_ended_at
-    return true unless data_file.attached?
-    self.started_at = start_time
-    self.ended_at = end_time
+    # the docs say not to do this in a callback (and i agree with them) but active storage is really throwing a wrench in the works here
+    self.update_columns(
+      started_at: start_time,
+      ended_at: end_time,
+    )
+  end
+
+  def data_file_analyzed?
+    return data_file.analyzed?
   end
 end

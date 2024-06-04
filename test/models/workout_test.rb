@@ -15,8 +15,9 @@ class WorkoutTest < ActiveSupport::TestCase
       io: File.open(Rails.root.join("test", "fixtures", "files", "cycling_workout.json")),
       filename: "cycling_workout.json")
 
-
     assert(workout.save!)
+    workout.reload
+
     assert_equal("2024-04-27 17:53:50 UTC", workout.started_at.to_s)
     assert_equal("2024-04-27 18:49:36 UTC", workout.ended_at.to_s)
   end

@@ -1,7 +1,6 @@
 require "test_helper"
 
 class WorkoutsControllerTest < ActionDispatch::IntegrationTest
-  self.use_transactional_tests = false # since workouts has an after commit hook we skip transactions for these tests
   setup do
     @workout = workouts(:one)
     @workout2 = workouts(:two)
