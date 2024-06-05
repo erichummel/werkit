@@ -4,9 +4,13 @@ const baseRideInterval = 1000;
 export default class extends Controller {
   static values = {
     workouts: Array,
-    loadedWorkouts: Object,
+    loadedWorkouts: {type: Object, default: {}},
+    selectedWorkout: Object,
     url: String,
-    foo: String,
+    colorWheel: {
+      type: Array,
+      default: ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3']
+    },
   }
 
   mph(mps) {
@@ -410,9 +414,10 @@ export default class extends Controller {
     }
   }
 
-  initializeMap(workout) {
+  drawWorkoutRoute(workout) {
     const mapContainer = document.getElementById('workout-map');
-    this.map = L.map(mapContainer).setView(workout.middle_point, 13);
+
+    this.centerMapAndRenderRoute(workout, mapContainer);
     const resizeObserver = new ResizeObserver(() => {
       this.map.invalidateSize();
     });
@@ -422,11 +427,23 @@ export default class extends Controller {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(this.map);
 
-    this.waypoints = workout.waypoints;
-    this.workoutPolyline = L.polyline(workout.waypoints_latlng, {color: '#00ff00'}).addTo(this.map);
-
-    this.workoutPolyline.on('click', this.selectWaypointForEvent.bind(this));
     this.bindKeyStrokes();
+  }
+
+  centerMapAndRenderRoute(workout, mapContainer){
+    (this.map ||= L.map(mapContainer)).setView(workout.middle_point, 13);
+    if (workout.polyline) {
+      workout.polyline.bringToFront();
+      return;
+    }
+
+    workout.polyline = L.polyline(workout.waypoints_latlng, {color: this.nextRouteColor()}).addTo(this.map);
+    workout.polyline.on('click', this.selectWaypointForEvent.bind(this));
+  }
+
+  nextRouteColor() {
+    this.colorWheelValue.push(this.colorWheelValue.shift());
+    return this.colorWheelValue[0];
   }
 
   toggleSelected(e){
@@ -437,7 +454,7 @@ export default class extends Controller {
         this.fetchWorkout(workout);
         return true
       }else if (workout.id == workoutID){
-        this.initializeMap(this.loadedWorkoutsValue[workoutID]);
+        this.drawWorkoutRoute(this.loadedWorkoutsValue[workoutID]);
         return true;
       }
     });
@@ -448,7 +465,7 @@ export default class extends Controller {
     then(response => response.json()).
     then(workout => {
       this.loadedWorkoutsValue[workout.id] = workout;
-      this.initializeMap(workout);
+      this.drawWorkoutRoute(workout);
     });
   }
 
