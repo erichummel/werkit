@@ -234,22 +234,22 @@ export default class extends Controller {
   }
 
   nearbyWaypoints(waypoint, count) {
-    const waypointIndex = this.waypoints.indexOf(waypoint);
-    return this.waypoints.slice(waypointIndex - count, waypointIndex + count);
+    const waypointIndex = this.selectedWorkoutWaypoints().indexOf(waypoint);
+    return this.selectedWorkoutWaypoints().slice(waypointIndex - count, waypointIndex + count);
   }
 
   calculatedDistance() {
-    return this.waypoints.reduce((function(totalDistance, waypoint, index) {
+    return this.selectedWorkoutWaypoints().reduce((function(totalDistance, waypoint, index) {
       if (index > 0) {
-        totalDistance += this.waypointDistanceFromWaypoint(waypoint, this.waypoints[index - 1]);
+        totalDistance += this.waypointDistanceFromWaypoint(waypoint, this.selectedWorkoutWaypoints()[index - 1]);
       }
       return totalDistance;
     }).bind(this), 0);
   }
 
   selectWaypointForEvent(event) {
-    const waypoint = this.findWaypoint(event.latlng, this.waypoints);
-    const oppositeWaypoint = this.findOppositeWaypoint(waypoint, this.waypoints);
+    const waypoint = this.findWaypoint(event.latlng, this.selectedWorkoutWaypoints());
+    const oppositeWaypoint = this.findOppositeWaypoint(waypoint, this.selectedWorkoutWaypoints());
     const waypointTooltipContents = this.waypointOverlayTemplate(waypoint) + this.waypointOverlayTemplate(oppositeWaypoint);
 
     this.waypointTooltip && this.wayPointTooltip.remove();
@@ -264,6 +264,10 @@ export default class extends Controller {
   }
 
   bindKeyStrokes() {
+    if (this.keystrokesBound) {
+      return;
+    }
+    this.keystrokesBound = true;
     document.addEventListener('keydown', this.handleKeyStrokes.bind(this));
   }
 
@@ -361,16 +365,23 @@ export default class extends Controller {
     return waypoint;
   }
 
+  selectedWorkoutWaypoints() {
+    return this.loadedWorkoutsValue[this.selectedWorkoutValue.id].waypoints;
+  }
+
   selectedWaypointIndex() {
-    return this.waypoints.indexOf(this.selectedWaypoint);
+    if(!this.selectedWaypoint) {
+      return 0;
+    }
+    return this.selectedWorkoutWaypoints().indexOf(this.selectedWaypoint);
   }
 
   nextWaypoint(){
-    return this.waypoints[this.selectedWaypointIndex() + 1] || this.selectedWaypoint;
+    return this.selectedWorkoutWaypoints()[this.selectedWaypointIndex() + 1] || this.selectedWaypoint;
   }
 
   previousWaypoint(){
-    return this.waypoints[this.selectedWaypointIndex() - 1] || this.selectedWaypoint;
+    return this.selectedWorkoutWaypoints()[this.selectedWaypointIndex() - 1] || this.selectedWaypoint;
   }
 
   selectNextWaypoint() {
@@ -382,7 +393,7 @@ export default class extends Controller {
   }
 
   resetWaypoint() {
-    return this.selectWaypoint(this.waypoints[0]);
+    return this.selectWaypoint(this.selectedWorkoutWaypoints()[0]);
   }
 
   showWaypointMarker(waypoint) {
@@ -417,7 +428,7 @@ export default class extends Controller {
   drawWorkoutRoute(workout) {
     const mapContainer = document.getElementById('workout-map');
 
-    this.centerMapAndRenderRoute(workout, mapContainer);
+    this.centerMapAndDrawRoute(workout, mapContainer);
     const resizeObserver = new ResizeObserver(() => {
       this.map.invalidateSize();
     });
@@ -430,7 +441,7 @@ export default class extends Controller {
     this.bindKeyStrokes();
   }
 
-  centerMapAndRenderRoute(workout, mapContainer){
+  centerMapAndDrawRoute(workout, mapContainer){
     (this.map ||= L.map(mapContainer)).setView(workout.middle_point, 13);
     if (workout.polyline) {
       workout.polyline.bringToFront();
@@ -446,16 +457,22 @@ export default class extends Controller {
     return this.colorWheelValue[0];
   }
 
-  toggleSelected(e){
-    const workoutEl = e.target.closest("div.workout");
+  toggleSelected(event){
+    const workoutEl = event.target.closest("div.workout");
     const workoutID = workoutEl.dataset.id;
+    this.selectWorkout(workoutID);
+  }
+
+  selectWorkout(workoutID) {
     this.workoutsValue.find((workout) => {
+      if(workout.id == workoutID){
+        this.selectedWorkoutValue = workout;
+      }
+
       if(workout.id == workoutID && !this.loadedWorkoutsValue[workoutID]){
         this.fetchWorkout(workout);
-        return true
       }else if (workout.id == workoutID){
         this.drawWorkoutRoute(this.loadedWorkoutsValue[workoutID]);
-        return true;
       }
     });
   }
@@ -463,8 +480,8 @@ export default class extends Controller {
   fetchWorkout(workout) {
     fetch(`/workouts/${workout.id}.json`).
     then(response => response.json()).
-    then(workout => {
-      this.loadedWorkoutsValue[workout.id] = workout;
+    then(responseWorkout => {
+      this.loadedWorkoutsValue[workout.id] = Object.assign(workout, responseWorkout);
       this.drawWorkoutRoute(workout);
     });
   }
@@ -474,7 +491,7 @@ export default class extends Controller {
     then(response => response.json()).
     then(data => {
       this.workoutsValue = data;
-      this.fetchWorkout(this.workoutsValue[0]);
+      this.selectWorkout(this.workoutsValue[0].id);
     });
   }
 
