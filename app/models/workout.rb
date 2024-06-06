@@ -3,7 +3,7 @@ class Workout < ApplicationRecord
 
   has_one_attached :data_file
   belongs_to :user
-
+  default_scope { order(started_at: :desc) }
   attr_accessor :anonymize
 
   # TODO: there's a lot of presentation logic in this model. someone should do something about that
@@ -170,11 +170,12 @@ class Workout < ApplicationRecord
 
   def self.bulk_upload(user, path)
     data = JSON.parse(File.read(path))
-    data["workouts"].each do |workout_data|
+
+    data["data"]["workouts"].each do |workout_data|
       next unless workout_data["name"] =~ /cycling/i
       workout = Workout.new(user: user)
       workout.data_file.attach(
-        io: StringIO.new({workouts: [workout_data]}.to_json),
+        io: StringIO.new({data: {workouts: [workout_data]}}.to_json),
         filename: "workout.json",
         content_type: "application/json",
       )

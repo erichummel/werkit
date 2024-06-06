@@ -3,9 +3,6 @@ const baseRideInterval = 1000;
 
 export default class extends Controller {
   static values = {
-    workouts: Array,
-    loadedWorkouts: {type: Object, default: {}},
-    selectedWorkout: Object,
     url: String,
     colorWheel: {
       type: Array,
@@ -165,21 +162,6 @@ export default class extends Controller {
 
   timeOfDay(timestamp) {
     return new Date(timestamp).toLocaleTimeString();
-  }
-
-  workoutTooltipTemplate(workoutJSON) {
-    return `
-      <div class='workoutTooltip'>
-        <h4>Workout</h4>
-        <ul>
-          <li>Start: ${workoutJSON.start}</li>
-          <li>Finish: ${workoutJSON.finish}</li>
-          <li>Average Speed: ${this.mph(workoutJSON.average_speed)}</li>
-          <li>Duration: ${this.minutes(workoutJSON.duration)}</li>
-          <li>Distance: ${this.calculatedDistance()}</li>
-        </ul>
-      </div>
-    `
   }
 
   keyboardControlsTemplate() {
@@ -366,7 +348,7 @@ export default class extends Controller {
   }
 
   selectedWorkoutWaypoints() {
-    return this.loadedWorkoutsValue[this.selectedWorkoutValue.id].waypoints;
+    return this.loadedWorkouts[this.selectedWorkout.id].waypoints;
   }
 
   selectedWaypointIndex() {
@@ -427,7 +409,7 @@ export default class extends Controller {
 
   drawWorkoutRoute(workout) {
     const mapContainer = document.getElementById('workout-map');
-
+    mapContainer.style['height'] = `${window.innerHeight - 20}px`
     this.centerMapAndDrawRoute(workout, mapContainer);
     const resizeObserver = new ResizeObserver(() => {
       this.map.invalidateSize();
@@ -464,34 +446,48 @@ export default class extends Controller {
   }
 
   selectWorkout(workoutID) {
-    this.workoutsValue.find((workout) => {
+    this.clearSelectedWorkout();
+    this.workouts.find((workout) => {
       if(workout.id == workoutID){
-        this.selectedWorkoutValue = workout;
+        this.selectedWorkout = workout;
+        this.markSelectedWorkout(document.querySelector(`.workout[data-id="${workout.id}"]`));
       }
 
-      if(workout.id == workoutID && !this.loadedWorkoutsValue[workoutID]){
+      if(workout.id == workoutID && !this.loadedWorkouts[workoutID]){
         this.fetchWorkout(workout);
       }else if (workout.id == workoutID){
-        this.drawWorkoutRoute(this.loadedWorkoutsValue[workoutID]);
+        this.drawWorkoutRoute(this.loadedWorkouts[workoutID]);
       }
     });
+  }
+
+  clearSelectedWorkout() {
+    document.querySelectorAll('.workout').forEach((workoutEl) => {
+      workoutEl.classList.remove('selected');
+    });
+  }
+
+  markSelectedWorkout(workoutEl) {
+    workoutEl.classList.add('selected');
   }
 
   fetchWorkout(workout) {
     fetch(`/workouts/${workout.id}.json`).
     then(response => response.json()).
     then(responseWorkout => {
-      this.loadedWorkoutsValue[workout.id] = Object.assign(workout, responseWorkout);
+      this.loadedWorkouts[workout.id] = Object.assign(workout, responseWorkout);
       this.drawWorkoutRoute(workout);
     });
   }
 
   fetchWorkouts() {
+    this.loadedWorkouts ||= {};
+
     fetch(this.urlValue).
     then(response => response.json()).
     then(data => {
-      this.workoutsValue = data;
-      this.selectWorkout(this.workoutsValue[0].id);
+      this.workouts = data;
+      this.selectWorkout(this.workouts[0].id);
     });
   }
 
