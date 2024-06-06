@@ -1,5 +1,5 @@
 main.index-container div.map {
-  height: 1000px;
+  height: 100%;
   width: 100%;
   resize: both;
   overflow: auto;
@@ -20,6 +20,14 @@ div#workouts .workout {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+}
+
+div#workouts .workout.selected {
+  border-width: 2px;
+  border-color: #666;
+  border-style: solid;
+  border-radius: 3px;
+  margin-left: 3px;
 }
 
 div#workouts .workout .info {
