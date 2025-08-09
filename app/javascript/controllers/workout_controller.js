@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import Plotly from 'plotly'
 const baseRideInterval = 1000;
 
 export default class extends Controller {
@@ -414,6 +415,7 @@ export default class extends Controller {
   }
 
   showWaypointMarker(waypoint) {
+    console.log("show waypoint marker");
     if(!waypoint) {
       return;
     }
@@ -436,8 +438,8 @@ export default class extends Controller {
   showWorkoutOverlay(workout) {
     const workoutOverlay = document.getElementById('workout-stats');
     workoutOverlay.innerHTML = this.workoutOverlayTemplate(workout);
-    this.showElevationGraph(workout);
-    this.showVelocityGraph(workout);
+    // this.showElevationGraph(workout);
+    // this.showVelocityGraph(workout);
   }
 
   showElevationGraph(workout, waypoint) {
