@@ -436,8 +436,8 @@ export default class extends Controller {
   showWorkoutOverlay(workout) {
     const workoutOverlay = document.getElementById('workout-stats');
     workoutOverlay.innerHTML = this.workoutOverlayTemplate(workout);
-    this.showElevationGraph(workout);
-    this.showVelocityGraph(workout);
+    // this.showElevationGraph(workout);
+    // this.showVelocityGraph(workout);
   }
 
   showElevationGraph(workout, waypoint) {
