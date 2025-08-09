@@ -45,26 +45,30 @@ div#workouts .workout:hover {
   cursor: pointer;
 }
 
-div#waypoint-stats {
-  width: 300px;
-  padding: 1em;
-  background-color: rgba(255,255,255,0.8);
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 10px;
+div.stats-overlays {
+  position: absolute;
+  z-index: 1000;
   position: absolute;
   right: 0;
-  z-index: 1000;
+  background-color: rgba(255,255,255,0.8);
+  box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 10px;
+}
+
+div#waypoint-stats, div#workout-stats {
+  width: 300px;
+  padding: 1em;
 }
 
 div.waypoint-stats {
     display: flex;
 }
 
-div.waypoint-stats h4 {
+div.overlay.stats h4 {
   margin: -5px 0 0 0;
   padding: 0;
 }
 
-div.waypoint-stats ul {
+div.overlay.stats ul {
   list-style-type: none;
   min-width: 140px;
   padding: 0;
