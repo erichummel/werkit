@@ -18,9 +18,28 @@ export default class extends Controller {
     const feetConversionFactor = 3.28084;
     return meters * feetConversionFactor;
   }
+
+  miles(meters) {
+    return meters * 0.000621371;
+  }
+
   minutes(seconds) {
     const minutesConversionFactor = 60;
     return seconds / minutesConversionFactor;
+  }
+
+  elevationData(workout) {
+    return {
+      x: workout.waypoints.map((waypoint, index) => { return index }),
+      y: workout.waypoints.map((waypoint) => { return this.feet(waypoint.table.altitude) }),
+    };
+  }
+
+  velocityData(workout) {
+    return {
+      x: workout.waypoints.map((waypoint, index) => { return index }),
+      y: workout.waypoints.map((waypoint) => { return this.mph(waypoint.table.speed) }),
+    };
   }
 
   timestampForWaypoint(waypoint) {
@@ -215,6 +234,21 @@ export default class extends Controller {
     `;
   }
 
+  workoutOverlayTemplate(workout) {
+    if (!workout) {
+      return '';
+    }
+    return `<div class='workout-stats'>
+      <ul class='column'>
+        <li class='heading'><div class='column'>1/1/11: ${this.timeOfDay(workout.started_at)}-${this.timeOfDay(workout.ended_at)}</li>
+        <li>${this.miles(this.calculatedDistance()).toPrecision(4)} miles</li>
+      </ul>
+      <div class='graph' id='elevation-graph'></div>
+      <div class='graph' id='velocity-graph'></div>
+    </div>
+    `;
+  }
+
   nearbyWaypoints(waypoint, count) {
     const waypointIndex = this.selectedWorkoutWaypoints().indexOf(waypoint);
     return this.selectedWorkoutWaypoints().slice(waypointIndex - count, waypointIndex + count);
@@ -343,6 +377,7 @@ export default class extends Controller {
   selectWaypoint(waypoint){
     this.selectedWaypoint = waypoint;
     this.showWaypointOverlay(waypoint);
+    this.showWorkoutOverlay(this.selectedWorkout);
     this.showWaypointMarker(waypoint);
     return waypoint;
   }
@@ -396,6 +431,33 @@ export default class extends Controller {
     })
     this.waypointMarker && this.waypointMarker.remove();
     this.waypointMarker = L.marker(L.latLng(waypoint.table.latitude, waypoint.table.longitude), {icon: icon}).addTo(this.map);
+  }
+
+  showWorkoutOverlay(workout) {
+    const workoutOverlay = document.getElementById('workout-stats');
+    workoutOverlay.innerHTML = this.workoutOverlayTemplate(workout);
+    this.showElevationGraph(workout);
+    this.showVelocityGraph(workout);
+  }
+
+  showElevationGraph(workout, waypoint) {
+    const graphContainer = document.getElementById('elevation-graph');
+    const data = this.elevationData(workout);
+    Plotly.newPlot(graphContainer, [data], {
+      title: "Elevation",
+      margin: { t: 0 },
+      responsive: true,
+    });
+  }
+
+  showVelocityGraph(workout) {
+    const graphContainer = document.getElementById('velocity-graph');
+    const data = this.velocityData(workout);
+    Plotly.newPlot(graphContainer, [data], {
+      title: "Velocity",
+      margin: { t: 0 },
+      responsive: true,
+    });
   }
 
   showWaypointOverlay(waypoint) {
