@@ -31,7 +31,7 @@ export default class extends Controller {
       0.1,
       2000
     )
-    this.camera.position.set(0, 10, 20)
+    this.camera.position.set(0, 20, 20)
 
     // Renderer setup
     this.renderer = new THREE.WebGLRenderer({
@@ -223,9 +223,9 @@ export default class extends Controller {
   setupControls() {
     // Simple orbit controls
     this.controls = {
-      rotationX: 0,
+      rotationX: 0.70, // Approximately 20 degrees in radians
       rotationY: 0,
-      distance: 30
+      distance: 100
     }
 
     // Mouse controls
