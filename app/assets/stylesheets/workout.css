@@ -226,11 +226,66 @@ img.leaflet-marker-shadow.cyclist {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-radius: 12px;
-  padding: 20px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   min-width: 280px;
   max-width: 350px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.workout-details-overlay.collapsed {
+  min-width: 200px;
+  max-width: 200px;
+}
+
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px 15px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.overlay-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 1.4em;
+  font-weight: 600;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+.toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.toggle-icon {
+  font-size: 18px;
+  font-weight: bold;
+  color: #666;
+  line-height: 1;
+}
+
+.overlay-content {
+  padding: 20px;
+  max-height: 500px;
+  opacity: 1;
+  transition: all 0.3s ease;
+  overflow: hidden;
 }
 
 .workout-info h2 {

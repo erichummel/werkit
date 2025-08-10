@@ -29,7 +29,7 @@ export default class extends Controller {
       75,
       this.canvasTarget.clientWidth / this.canvasTarget.clientHeight,
       0.1,
-      1000
+      2000
     )
     this.camera.position.set(0, 10, 20)
 
@@ -41,6 +41,7 @@ export default class extends Controller {
     this.renderer.setSize(this.canvasTarget.clientWidth, this.canvasTarget.clientHeight)
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    this.renderer.shadowMap.autoUpdate = true
 
     // Lighting
     this.setupLighting()
@@ -60,7 +61,7 @@ export default class extends Controller {
 
   setupLighting() {
     // Ambient light
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6)
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.8)
     this.scene.add(ambientLight)
 
     // Directional light (sun)
@@ -75,6 +76,9 @@ export default class extends Controller {
     directionalLight.shadow.camera.right = 100
     directionalLight.shadow.camera.top = 100
     directionalLight.shadow.camera.bottom = -100
+    directionalLight.shadow.bias = -0.0001
+    directionalLight.shadow.normalBias = 0.02
+    directionalLight.shadow.intensity = 0.2
     this.scene.add(directionalLight)
   }
 
@@ -221,7 +225,7 @@ export default class extends Controller {
     this.controls = {
       rotationX: 0,
       rotationY: 0,
-      distance: 20
+      distance: 30
     }
 
     // Mouse controls
@@ -255,7 +259,7 @@ export default class extends Controller {
     // Zoom with mouse wheel
     this.canvasTarget.addEventListener('wheel', (event) => {
       this.controls.distance += event.deltaY * 0.1
-      this.controls.distance = Math.max(5, Math.min(50, this.controls.distance))
+      this.controls.distance = Math.max(2, Math.min(200, this.controls.distance))
     })
   }
 
