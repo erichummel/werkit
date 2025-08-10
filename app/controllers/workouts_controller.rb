@@ -30,8 +30,8 @@ class WorkoutsController < ApplicationController
         format.html { redirect_to workout_url(@workout), notice: "Workout was successfully created." }
         format.json { render :show, status: :created, location: @workout }
       else
-        format.html { render :new, status: :unprocessable_entity }
-        format.json { render json: @workout.errors, status: :unprocessable_entity }
+        format.html { render :new, status: :unprocessable_content }
+        format.json { render json: @workout.errors, status: :unprocessable_content }
       end
     end
   end
@@ -44,8 +44,8 @@ class WorkoutsController < ApplicationController
         format.html { redirect_to workout_url(@workout), notice: "Workout was successfully updated." }
         format.json { render :show, status: :ok, location: @workout }
       else
-        format.html { render :edit, status: :unprocessable_entity }
-        format.json { render json: @workout.errors, status: :unprocessable_entity }
+        format.html { render :edit, status: :unprocessable_content }
+        format.json { render json: @workout.errors, status: :unprocessable_content }
       end
     end
   end

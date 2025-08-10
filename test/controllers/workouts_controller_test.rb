@@ -26,8 +26,7 @@ class WorkoutsControllerTest < ActionDispatch::IntegrationTest
       post workouts_url, params: { workout: { data_file: data_file, user_id: @user.id } }
     end
 
-    workout = Workout.last
-
+    workout = Workout.order(id: :desc).first
     assert_redirected_to workout_url(workout)
     assert workout.data_file.attached?
     assert workout.started_at = Time.parse("2024-04-27 17:53:50 UTC")
