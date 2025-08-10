@@ -1,10 +1,29 @@
 <p style="color: green"><%= notice %></p>
-
 <%= render @workout, include_map: true %>
-
+<!-- 3D Workout Visualization -->
+<div class="workout-3d-container">
+  <h3>3D Route Visualization</h3>
+  <div
+    data-controller="three-workout"
+    data-three-workout-workout-data-value="<%= @workout.as_json(include_waypoints: true).to_json %>"
+    data-three-workout-waypoints-value="<%= @workout.waypoints.map(&:to_h).to_json %>"
+    style="position: relative; width: 100%; height: 500px; border: 1px solid #ccc; border-radius: 8px; overflow: hidden;">
+    <canvas
+      data-three-workout-target="canvas"
+      style="width: 100%; height: 100%; display: block;">
+    </canvas>
+    <div class="controls-overlay">
+      <div>🎮 <strong>Controls:</strong></div>
+      <div>• Drag to rotate view</div>
+      <div>• Scroll to zoom</div>
+      <div>• Green sphere = Start</div>
+      <div>• Red sphere = End</div>
+      <div>• Line color = Speed (green=slow, red=fast)</div>
+    </div>
+  </div>
+</div>
 <div>
   <%= link_to "Edit this workout", edit_workout_path(@workout) %> |
   <%= link_to "Back to workouts", workouts_path %>
-
   <%= button_to "Destroy this workout", @workout, method: :delete %>
 </div>

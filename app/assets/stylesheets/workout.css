@@ -144,3 +144,48 @@ img.leaflet-marker-shadow.cyclist {
   margin-top: -6px;
   margin-left: 3px;
 }
+
+/* 3D Workout Visualization Styles */
+.workout-3d-container {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.workout-3d-container h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.5em;
+}
+
+.workout-3d-container canvas {
+  border-radius: 4px;
+  cursor: grab;
+}
+
+.workout-3d-container canvas:active {
+  cursor: grabbing;
+}
+
+.workout-3d-container .controls-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.workout-3d-container .controls-overlay strong {
+  color: #4CAF50;
+}
+
+.workout-3d-container .controls-overlay div {
+  margin: 2px 0;
+}
