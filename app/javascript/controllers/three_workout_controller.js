@@ -97,7 +97,7 @@ export default class extends Controller {
     this.scene.add(gridHelper)
   }
 
-  createMapTexture(geometry) {
+    createMapTexture(geometry) {
     if (!this.waypointsValue || this.waypointsValue.length === 0) {
       // Fallback to simple ground if no waypoints
       const groundMaterial = new THREE.MeshLambertMaterial({
@@ -111,39 +111,97 @@ export default class extends Controller {
       return
     }
 
-    // Calculate bounds for map tiles
+    // Calculate bounds and create multi-tile map
     const bounds = this.calculateMapBounds()
-    const center = this.calculateMapCenter(bounds)
+    this.createMultiTileMap(geometry, bounds)
+  }
 
-    // Create map texture
-    const textureLoader = new THREE.TextureLoader()
-    const mapUrl = this.buildMapUrl(bounds, center)
+  createMultiTileMap(geometry, bounds) {
+    const zoom = this.calculateOptimalZoom(bounds)
+    const padding = 0.001 // Add some padding around the route
 
-    textureLoader.load(mapUrl, (texture) => {
-      texture.wrapS = THREE.ClampToEdgeWrapping
-      texture.wrapT = THREE.ClampToEdgeWrapping
+    // Expand bounds with padding
+    const expandedBounds = {
+      minLat: bounds.minLat - padding,
+      maxLat: bounds.maxLat + padding,
+      minLng: bounds.minLng - padding,
+      maxLng: bounds.maxLng + padding
+    }
 
-      const groundMaterial = new THREE.MeshLambertMaterial({
-        map: texture,
-        side: THREE.DoubleSide
-      })
+    // Calculate tile range
+    const tileRange = this.calculateTileRange(expandedBounds, zoom)
 
-      const ground = new THREE.Mesh(geometry, groundMaterial)
-      ground.rotation.x = -Math.PI / 2
-      ground.receiveShadow = true
-      this.scene.add(ground)
-    }, undefined, (error) => {
-      console.error('Error loading map texture:', error)
-      // Fallback to simple ground
-      const groundMaterial = new THREE.MeshLambertMaterial({
-        color: 0x90EE90,
-        side: THREE.DoubleSide
-      })
-      const ground = new THREE.Mesh(geometry, groundMaterial)
-      ground.rotation.x = -Math.PI / 2
-      ground.receiveShadow = true
-      this.scene.add(ground)
+    // Create a large canvas to combine multiple tiles
+    const canvas = document.createElement('canvas')
+    const tileSize = 256
+    const cols = tileRange.maxX - tileRange.minX + 1
+    const rows = tileRange.maxY - tileRange.minY + 1
+    canvas.width = cols * tileSize
+    canvas.height = rows * tileSize
+    const ctx = canvas.getContext('2d')
+
+    // Load all tiles
+    let loadedTiles = 0
+    const totalTiles = cols * rows
+
+    for (let x = tileRange.minX; x <= tileRange.maxX; x++) {
+      for (let y = tileRange.minY; y <= tileRange.maxY; y++) {
+        const tileUrl = `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+
+        img.onload = () => {
+          const drawX = (x - tileRange.minX) * tileSize
+          const drawY = (y - tileRange.minY) * tileSize
+          ctx.drawImage(img, drawX, drawY)
+
+          loadedTiles++
+          if (loadedTiles === totalTiles) {
+            this.createMapMesh(geometry, canvas, expandedBounds)
+          }
+        }
+
+        img.onerror = () => {
+          console.warn(`Failed to load tile: ${tileUrl}`)
+          loadedTiles++
+          if (loadedTiles === totalTiles) {
+            this.createMapMesh(geometry, canvas, expandedBounds)
+          }
+        }
+
+        img.src = tileUrl
+      }
+    }
+  }
+
+  calculateTileRange(bounds, zoom) {
+    const scale = Math.pow(2, zoom)
+
+    const minX = Math.floor((bounds.minLng + 180) / 360 * scale)
+    const maxX = Math.floor((bounds.maxLng + 180) / 360 * scale)
+    const minY = Math.floor((1 - Math.log(Math.tan(bounds.maxLat * Math.PI / 180) + 1 / Math.cos(bounds.maxLat * Math.PI / 180)) / Math.PI) / 2 * scale)
+    const maxY = Math.floor((1 - Math.log(Math.tan(bounds.minLat * Math.PI / 180) + 1 / Math.cos(bounds.minLat * Math.PI / 180)) / Math.PI) / 2 * scale)
+
+    return { minX, maxX, minY, maxY }
+  }
+
+  createMapMesh(geometry, canvas, bounds) {
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.wrapS = THREE.ClampToEdgeWrapping
+    texture.wrapT = THREE.ClampToEdgeWrapping
+
+    const groundMaterial = new THREE.MeshLambertMaterial({
+      map: texture,
+      side: THREE.DoubleSide
     })
+
+    const ground = new THREE.Mesh(geometry, groundMaterial)
+    ground.rotation.x = -Math.PI / 2
+    ground.receiveShadow = true
+    this.scene.add(ground)
+
+    // Store bounds for coordinate mapping
+    this.mapBounds = bounds
   }
 
   calculateMapBounds() {
@@ -159,29 +217,7 @@ export default class extends Controller {
     }
   }
 
-  calculateMapCenter(bounds) {
-    return {
-      lat: (bounds.minLat + bounds.maxLat) / 2,
-      lng: (bounds.minLng + bounds.maxLng) / 2
-    }
-  }
 
-  buildMapUrl(bounds, center) {
-    // Use OpenStreetMap tiles
-    const zoom = this.calculateOptimalZoom(bounds)
-    const tileSize = 256
-    const scale = Math.pow(2, zoom)
-
-    // Calculate tile coordinates
-    const lat = center.lat
-    const lng = center.lng
-
-    const x = Math.floor((lng + 180) / 360 * scale)
-    const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * scale)
-
-    // Use a tile server (OpenStreetMap)
-    return `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`
-  }
 
   calculateOptimalZoom(bounds) {
     const latDiff = bounds.maxLat - bounds.minLat
@@ -223,18 +259,16 @@ export default class extends Controller {
     let minLng = Math.min(...waypoints.map(p => p.longitude))
     let maxLng = Math.max(...waypoints.map(p => p.longitude))
 
-    // Calculate center for proper alignment with map
-    const centerLat = (minLat + maxLat) / 2
-    const centerLng = (minLng + maxLng) / 2
-
-    // Normalize to scene coordinates (scale to fit in 100x100 area)
+    // Use the same bounds as the map for proper alignment
     const latRange = maxLat - minLat
     const lngRange = maxLng - minLng
-    const scale = Math.max(latRange, lngRange) / 100
+
+    // Scale to fit within the 200x200 ground plane
+    const scale = Math.max(latRange, lngRange) / 180 // Leave some margin
 
     return waypoints.map((point, index) => ({
-      x: ((point.longitude - centerLng) / scale) * 100, // Scale to match map
-      z: ((point.latitude - centerLat) / scale) * 100, // Scale to match map
+      x: ((point.longitude - minLng) / scale) - 90, // Center horizontally
+      z: ((point.latitude - minLat) / scale) - 90, // Center vertically
       y: (point.altitude || 0) * 0.1, // Scale elevation
       speed: point.speed || 0,
       index: index
