@@ -64,9 +64,9 @@ export default class extends Controller {
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.0)
     this.scene.add(ambientLight)
 
-    // Directional light (sun)
+    // Directional light (sun) - positioned directly overhead
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2)
-    directionalLight.position.set(50, 50, 50)
+    directionalLight.position.set(0, 100, 0)
     directionalLight.castShadow = true
     directionalLight.shadow.mapSize.width = 2048
     directionalLight.shadow.mapSize.height = 2048
