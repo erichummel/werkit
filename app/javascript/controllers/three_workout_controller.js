@@ -85,19 +85,115 @@ export default class extends Controller {
   createGround() {
     // Create a large ground plane
     const groundGeometry = new THREE.PlaneGeometry(200, 200)
-    const groundMaterial = new THREE.MeshLambertMaterial({
-      color: 0x90EE90, // Light green
-      side: THREE.DoubleSide
-    })
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial)
-    ground.rotation.x = -Math.PI / 2
-    ground.receiveShadow = true
-    this.scene.add(ground)
 
-    // Add grid helper
+    // Create map texture
+    this.createMapTexture(groundGeometry)
+
+    // Add grid helper (optional, can be removed if map is clear enough)
     const gridHelper = new THREE.GridHelper(200, 20, 0x888888, 0x888888)
     gridHelper.position.y = 0.01
+    gridHelper.material.opacity = 0.3
+    gridHelper.material.transparent = true
     this.scene.add(gridHelper)
+  }
+
+  createMapTexture(geometry) {
+    if (!this.waypointsValue || this.waypointsValue.length === 0) {
+      // Fallback to simple ground if no waypoints
+      const groundMaterial = new THREE.MeshLambertMaterial({
+        color: 0x90EE90,
+        side: THREE.DoubleSide
+      })
+      const ground = new THREE.Mesh(geometry, groundMaterial)
+      ground.rotation.x = -Math.PI / 2
+      ground.receiveShadow = true
+      this.scene.add(ground)
+      return
+    }
+
+    // Calculate bounds for map tiles
+    const bounds = this.calculateMapBounds()
+    const center = this.calculateMapCenter(bounds)
+
+    // Create map texture
+    const textureLoader = new THREE.TextureLoader()
+    const mapUrl = this.buildMapUrl(bounds, center)
+
+    textureLoader.load(mapUrl, (texture) => {
+      texture.wrapS = THREE.ClampToEdgeWrapping
+      texture.wrapT = THREE.ClampToEdgeWrapping
+
+      const groundMaterial = new THREE.MeshLambertMaterial({
+        map: texture,
+        side: THREE.DoubleSide
+      })
+
+      const ground = new THREE.Mesh(geometry, groundMaterial)
+      ground.rotation.x = -Math.PI / 2
+      ground.receiveShadow = true
+      this.scene.add(ground)
+    }, undefined, (error) => {
+      console.error('Error loading map texture:', error)
+      // Fallback to simple ground
+      const groundMaterial = new THREE.MeshLambertMaterial({
+        color: 0x90EE90,
+        side: THREE.DoubleSide
+      })
+      const ground = new THREE.Mesh(geometry, groundMaterial)
+      ground.rotation.x = -Math.PI / 2
+      ground.receiveShadow = true
+      this.scene.add(ground)
+    })
+  }
+
+  calculateMapBounds() {
+    const waypoints = this.waypointsValue
+    const lats = waypoints.map(p => p.latitude)
+    const lngs = waypoints.map(p => p.longitude)
+
+    return {
+      minLat: Math.min(...lats),
+      maxLat: Math.max(...lats),
+      minLng: Math.min(...lngs),
+      maxLng: Math.max(...lngs)
+    }
+  }
+
+  calculateMapCenter(bounds) {
+    return {
+      lat: (bounds.minLat + bounds.maxLat) / 2,
+      lng: (bounds.minLng + bounds.maxLng) / 2
+    }
+  }
+
+  buildMapUrl(bounds, center) {
+    // Use OpenStreetMap tiles
+    const zoom = this.calculateOptimalZoom(bounds)
+    const tileSize = 256
+    const scale = Math.pow(2, zoom)
+
+    // Calculate tile coordinates
+    const lat = center.lat
+    const lng = center.lng
+
+    const x = Math.floor((lng + 180) / 360 * scale)
+    const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * scale)
+
+    // Use a tile server (OpenStreetMap)
+    return `https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`
+  }
+
+  calculateOptimalZoom(bounds) {
+    const latDiff = bounds.maxLat - bounds.minLat
+    const lngDiff = bounds.maxLng - bounds.minLng
+    const maxDiff = Math.max(latDiff, lngDiff)
+
+    // Calculate zoom level based on the size of the area
+    if (maxDiff > 1) return 10
+    if (maxDiff > 0.1) return 12
+    if (maxDiff > 0.01) return 14
+    if (maxDiff > 0.001) return 16
+    return 18
   }
 
   createWorkoutRoute() {
@@ -127,14 +223,18 @@ export default class extends Controller {
     let minLng = Math.min(...waypoints.map(p => p.longitude))
     let maxLng = Math.max(...waypoints.map(p => p.longitude))
 
+    // Calculate center for proper alignment with map
+    const centerLat = (minLat + maxLat) / 2
+    const centerLng = (minLng + maxLng) / 2
+
     // Normalize to scene coordinates (scale to fit in 100x100 area)
     const latRange = maxLat - minLat
     const lngRange = maxLng - minLng
     const scale = Math.max(latRange, lngRange) / 100
 
     return waypoints.map((point, index) => ({
-      x: ((point.longitude - minLng) / scale) - 50,
-      z: ((point.latitude - minLat) / scale) - 50,
+      x: ((point.longitude - centerLng) / scale) * 100, // Scale to match map
+      z: ((point.latitude - centerLat) / scale) * 100, // Scale to match map
       y: (point.altitude || 0) * 0.1, // Scale elevation
       speed: point.speed || 0,
       index: index
