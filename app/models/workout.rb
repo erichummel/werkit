@@ -1,3 +1,5 @@
+require 'ostruct'
+
 class Workout < ApplicationRecord
   after_commit :set_started_at_and_ended_at, if: :data_file_analyzed?, on: [:create, :update]
 
