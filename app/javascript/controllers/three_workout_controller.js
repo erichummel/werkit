@@ -252,7 +252,7 @@ export default class extends Controller {
     this.createMarkers(normalizedPoints)
   }
 
-  normalizeCoordinates(waypoints) {
+    normalizeCoordinates(waypoints) {
     if (waypoints.length === 0) return []
 
     // Find bounds
@@ -261,20 +261,82 @@ export default class extends Controller {
     let minLng = Math.min(...waypoints.map(p => p.longitude))
     let maxLng = Math.max(...waypoints.map(p => p.longitude))
 
-    // Use the same bounds as the map for proper alignment
+    // MAP PROJECTION PARAMETERS - ADJUST THESE TO FIX ALIGNMENT
+    const projectionParams = {
+      // Scale factors
+      latScale: 1.0,      // Latitude scaling factor
+      lngScale: 1.0,      // Longitude scaling factor
+
+      // Rotation (in radians)
+      rotation: 0,        // Rotation around Y axis
+
+      // Offsets
+      latOffset: 0,       // Latitude offset
+      lngOffset: 0,       // Longitude offset
+
+      // Ground plane mapping
+      groundSize: 180,    // Size of ground plane (200x200 with margin)
+      centerOffset: 90,   // Center offset for ground plane
+
+      // Elevation scaling
+      elevationScale: 0.1, // How much to scale altitude
+
+      // Axis flipping
+      flipX: false,       // Flip X axis
+      flipZ: true,        // Flip Z axis (usually needed)
+
+      // Additional transformations
+      swapAxes: false     // Swap X and Z axes
+    }
+
+    return this.applyMapProjection(waypoints, minLat, maxLat, minLng, maxLng, projectionParams)
+  }
+
+  applyMapProjection(waypoints, minLat, maxLat, minLng, maxLng, params) {
     const latRange = maxLat - minLat
     const lngRange = maxLng - minLng
 
-    // Scale to fit within the 200x200 ground plane
-    const scale = Math.max(latRange, lngRange) / 180 // Leave some margin
+    // Calculate scale based on the larger range
+    const maxRange = Math.max(latRange, lngRange)
+    const scale = maxRange / params.groundSize
 
-    return waypoints.map((point, index) => ({
-      x: ((point.longitude - minLng) / scale) - 90, // Center horizontally
-      z: -((point.latitude - minLat) / scale) + 90, // Center vertically (flip Z axis)
-      y: (point.altitude || 0) * 0.1, // Scale elevation
-      speed: point.speed || 0,
-      index: index
-    }))
+    return waypoints.map((point, index) => {
+      // Apply scaling and offsets
+      let lat = (point.latitude - minLat) * params.latScale + params.latOffset
+      let lng = (point.longitude - minLng) * params.lngScale + params.lngOffset
+
+      // Apply axis flipping
+      if (params.flipX) lng = -lng
+      if (params.flipZ) lat = -lat
+
+      // Apply rotation (if needed)
+      if (params.rotation !== 0) {
+        const cos = Math.cos(params.rotation)
+        const sin = Math.sin(params.rotation)
+        const newLat = lat * cos - lng * sin
+        const newLng = lat * sin + lng * cos
+        lat = newLat
+        lng = newLng
+      }
+
+      // Map to ground plane coordinates
+      let x, z
+      if (params.swapAxes) {
+        x = (lat / scale) - params.centerOffset
+        z = (lng / scale) - params.centerOffset
+      } else {
+        x = (lng / scale) - params.centerOffset
+        z = (lat / scale) - params.centerOffset
+      }
+
+      return {
+        x: x,
+        z: z,
+        y: (point.altitude || 0) * params.elevationScale,
+        speed: point.speed || 0,
+        index: index
+      }
+    })
   }
 
   createRouteLine(points) {
