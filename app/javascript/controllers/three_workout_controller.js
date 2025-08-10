@@ -61,11 +61,11 @@ export default class extends Controller {
 
   setupLighting() {
     // Ambient light
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.8)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0)
     this.scene.add(ambientLight)
 
     // Directional light (sun)
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2)
     directionalLight.position.set(50, 50, 50)
     directionalLight.castShadow = true
     directionalLight.shadow.mapSize.width = 2048
@@ -192,7 +192,9 @@ export default class extends Controller {
 
     const groundMaterial = new THREE.MeshLambertMaterial({
       map: texture,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 1.0
     })
 
     const ground = new THREE.Mesh(geometry, groundMaterial)
@@ -268,7 +270,7 @@ export default class extends Controller {
 
     return waypoints.map((point, index) => ({
       x: ((point.longitude - minLng) / scale) - 90, // Center horizontally
-      z: ((point.latitude - minLat) / scale) - 90, // Center vertically
+      z: -((point.latitude - minLat) / scale) + 90, // Center vertically (flip Z axis)
       y: (point.altitude || 0) * 0.1, // Scale elevation
       speed: point.speed || 0,
       index: index
