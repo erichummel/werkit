@@ -391,6 +391,12 @@ export default class extends Controller {
   createRouteLine(points) {
     if (points.length < 2) return
 
+    // Calculate actual speed range from the data
+    const speeds = points.map(point => point.speed)
+    const minSpeed = Math.min(...speeds)
+    const maxSpeed = Math.max(...speeds)
+    const speedRange = maxSpeed - minSpeed
+
     // Create geometry for the route line
     const geometry = new THREE.BufferGeometry()
     const positions = []
@@ -399,8 +405,8 @@ export default class extends Controller {
     points.forEach((point, index) => {
       positions.push(point.x, point.y, point.z)
 
-      // Color based on speed (green = slow, red = fast)
-      const speedRatio = Math.min(point.speed / 30, 1) // Assuming max speed of 30 m/s
+      // Color based on speed relative to actual range (green = slow, red = fast)
+      const speedRatio = speedRange > 0 ? (point.speed - minSpeed) / speedRange : 0
       const color = new THREE.Color()
       color.setHSL(0.3 * (1 - speedRatio), 1, 0.5) // Green to red
       colors.push(color.r, color.g, color.b)
@@ -421,6 +427,14 @@ export default class extends Controller {
   createElevationProfile(points) {
     if (points.length < 2) return
 
+    // Calculate actual speed range from the data
+    const speeds = points.map(point => point.speed)
+    const minSpeed = Math.min(...speeds)
+    const maxSpeed = Math.max(...speeds)
+    const speedRange = maxSpeed - minSpeed
+
+    console.log(`Speed range: ${minSpeed} to ${maxSpeed} m/s (range: ${speedRange})`)
+
     // Create a 3D elevation profile
     const geometry = new THREE.BufferGeometry()
     const positions = []
@@ -429,10 +443,16 @@ export default class extends Controller {
       // Create a small cube at each point to show elevation
       const size = 0.5
       const cubeGeometry = new THREE.BoxGeometry(size, size, size)
+
+      // Color based on speed relative to actual range (green = slow, red = fast)
+      const speedRatio = speedRange > 0 ? (point.speed - minSpeed) / speedRange : 0
+      const color = new THREE.Color()
+      color.setHSL(0.3 * (1 - speedRatio), 1, 0.5) // Green to red
+
       const cubeMaterial = new THREE.MeshLambertMaterial({
-        color: 0x4444ff,
+        color: color,
         transparent: true,
-        opacity: 0.7
+        opacity: 0.8
       })
       const cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
       cube.position.set(point.x, point.y + size/2, point.z)
