@@ -12,4 +12,10 @@ No warranty express or implied, etc., maybe someone can find it useful as a quic
 
 Here's a quick screencap of the UI in action, the letters in green are keyboard shortcuts (like I said, it doesn't do much)
 
-[![Click to play](https://github.com/erichummel/werkit/blob/tweaks/public/videos/ui_screenshot.png)](https://github.com/erichummel/werkit/assets/51916/a6ae31a1-f7c1-401b-815b-0aeee25bd2aa)
+[![Click to play](https://github.com/erichummel/werkit/blob/main/public/videos/ui_screenshot.png)](https://github.com/erichummel/werkit/assets/51916/a6ae31a1-f7c1-401b-815b-0aeee25bd2aa)
+
+# 3D Workout View
+
+The show route for workouts now shows a 3D view of the path taken with relative velocities and altitudes represented in a canvas rendering (powered by three.js) - still very rough around the edges as each workout needs to be nudged to fit/scale to the map it's rendered over.
+
+![3D view of workout](https://github.com/erichummel/werkit/blob/main/public/videos/ui_screenshot.png)
