@@ -501,20 +501,60 @@ img.leaflet-marker-shadow.cyclist {
   outline: none;
 }
 
+/* Make the selected state much more prominent */
 .control-row input[type="range"].selected {
-  box-shadow: 0 0 0 2px #4CAF50, 0 0 0 4px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 0 0 4px #4CAF50 !important;
+  border: 2px solid #2E7D32 !important;
+  border-radius: 6px !important;
+  background: #f0f8f0 !important;
+  position: relative;
+}
+
+.control-row input[type="range"].selected::before {
+  content: "SELECTED";
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4CAF50;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 1000;
 }
 
 .control-row input[type="range"].selected::-webkit-slider-thumb {
-  background: #2E7D32;
-  transform: scale(1.2);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background: #2E7D32 !important;
+  transform: scale(1.4) !important;
+  box-shadow: 0 0 0 3px #4CAF50, 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  border: 3px solid #fff !important;
 }
 
 .control-row input[type="range"].selected::-moz-range-thumb {
-  background: #2E7D32;
-  transform: scale(1.2);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background: #2E7D32 !important;
+  transform: scale(1.4) !important;
+  box-shadow: 0 0 0 3px #4CAF50, 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  border: 3px solid #fff !important;
+}
+
+/* Add a subtle animation for selection */
+.control-row input[type="range"] {
+  transition: all 0.3s ease;
+}
+
+.control-row input[type="range"].selected {
+  animation: selectedPulse 1.5s infinite;
+}
+
+@keyframes selectedPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px #4CAF50, 0 0 15px rgba(76, 175, 80, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px #4CAF50, 0 0 25px rgba(76, 175, 80, 0.6);
+  }
 }
 
 .control-row input[type="checkbox"] {

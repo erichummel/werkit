@@ -17,29 +17,37 @@ export default class extends Controller {
     this.setupKeyboardNavigation()
   }
 
-  setupKeyboardNavigation() {
+      setupKeyboardNavigation() {
     document.addEventListener('keydown', (event) => {
       if (!this.selectedSlider) return
+
+      console.log('Key pressed:', event.key, 'Shift:', event.shiftKey)
 
       const step = parseFloat(this.selectedSlider.step)
       const currentValue = parseFloat(this.selectedSlider.value)
       const min = parseFloat(this.selectedSlider.min)
       const max = parseFloat(this.selectedSlider.max)
 
+      // Apply 10x multiplier if shift is held
+      const adjustedStep = event.shiftKey ? step * 10 : step
+      console.log('Step:', step, 'Adjusted step:', adjustedStep)
+
       let newValue = currentValue
 
       switch(event.key) {
         case 'ArrowLeft':
         case 'ArrowDown':
-          newValue = Math.max(min, currentValue - step)
+          newValue = Math.max(min, currentValue - adjustedStep)
           break
         case 'ArrowRight':
         case 'ArrowUp':
-          newValue = Math.min(max, currentValue + step)
+          newValue = Math.min(max, currentValue + adjustedStep)
           break
         default:
           return
       }
+
+      console.log('Current value:', currentValue, 'New value:', newValue)
 
       if (newValue !== currentValue) {
         this.selectedSlider.value = newValue
@@ -56,20 +64,25 @@ export default class extends Controller {
     })
   }
 
-  selectSlider(slider) {
+  selectSlider(event) {
+    const slider = event.target
+    console.log('Selecting slider:', slider)
+
     // Remove previous selection
     this.deselectSlider()
 
     // Select new slider
     this.selectedSlider = slider
     slider.classList.add('selected')
+    console.log('Added selected class to slider')
 
     // Add focus for accessibility
     slider.focus()
   }
 
   deselectSlider() {
-    if (this.selectedSlider) {
+    if (this.selectedSlider && this.selectedSlider.classList) {
+      console.log('Deselecting slider:', this.selectedSlider)
       this.selectedSlider.classList.remove('selected')
       this.selectedSlider = null
     }
@@ -95,13 +108,13 @@ export default class extends Controller {
   // Scale controls
   updateLatScale() {
     const value = parseFloat(this.latScaleTarget.value)
-    this.latScaleValueTarget.textContent = value.toFixed(1)
+    this.latScaleValueTarget.textContent = value.toFixed(2)
     this.updateProjection()
   }
 
   updateLngScale() {
     const value = parseFloat(this.lngScaleTarget.value)
-    this.lngScaleValueTarget.textContent = value.toFixed(1)
+    this.lngScaleValueTarget.textContent = value.toFixed(2)
     this.updateProjection()
   }
 
