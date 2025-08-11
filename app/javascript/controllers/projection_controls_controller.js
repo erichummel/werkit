@@ -88,7 +88,7 @@ export default class extends Controller {
     }
   }
 
-  attemptConnection() {
+    attemptConnection() {
     // Use global reference to the Three.js controller
     this.threeController = window.three_workout_controller
 
@@ -102,7 +102,47 @@ export default class extends Controller {
     }
 
     console.log('Projection controls connected to Three.js controller via global reference')
+    this.syncWithProjectionParams()
     this.updateDisplayValues()
+  }
+
+  syncWithProjectionParams() {
+    if (!this.threeController || !this.threeController.projectionParams) {
+      console.log('No projection params available yet')
+      return
+    }
+
+    const params = this.threeController.projectionParams
+    console.log('Syncing controls with projection params:', params)
+
+    // Update slider values to match projection params
+    if (this.hasLatScaleTarget) {
+      this.latScaleTarget.value = params.latScale
+    }
+    if (this.hasLngScaleTarget) {
+      this.lngScaleTarget.value = params.lngScale
+    }
+    if (this.hasRotationTarget) {
+      this.rotationTarget.value = params.rotation * 180 / Math.PI // Convert radians to degrees
+    }
+    if (this.hasLatOffsetTarget) {
+      this.latOffsetTarget.value = params.latOffset
+    }
+    if (this.hasLngOffsetTarget) {
+      this.lngOffsetTarget.value = params.lngOffset
+    }
+    if (this.hasElevationScaleTarget) {
+      this.elevationScaleTarget.value = params.elevationScale
+    }
+    if (this.hasFlipXTarget) {
+      this.flipXTarget.checked = params.flipX
+    }
+    if (this.hasFlipZTarget) {
+      this.flipZTarget.checked = params.flipZ
+    }
+    if (this.hasSwapAxesTarget) {
+      this.swapAxesTarget.checked = params.swapAxes
+    }
   }
 
   // Scale controls
