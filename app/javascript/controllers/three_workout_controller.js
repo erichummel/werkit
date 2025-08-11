@@ -304,16 +304,36 @@ export default class extends Controller {
     this.recreateWorkoutRoute()
   }
 
-  recreateWorkoutRoute() {
+    recreateWorkoutRoute() {
     console.log('Recreating workout route...')
 
-    // Remove existing route elements (keep ground plane and grid)
-    const originalChildren = [...this.scene.children]
-    this.scene.children = this.scene.children.filter(child =>
-      child.type === 'Mesh' && (child.geometry.type === 'PlaneGeometry' || child.type === 'GridHelper')
-    )
+    // Remove only the route-specific elements (lines, markers, elevation cubes)
+    // Keep the ground plane (map), grid, and lights
+    const elementsToRemove = []
 
-    console.log('Removed route elements, kept ground plane and grid')
+    this.scene.children.forEach(child => {
+      // Remove lines (route paths)
+      if (child.type === 'Line') {
+        elementsToRemove.push(child)
+      }
+      // Remove spheres (start/end markers)
+      else if (child.type === 'Mesh' && child.geometry.type === 'SphereGeometry') {
+        elementsToRemove.push(child)
+      }
+      // Remove cubes (elevation markers)
+      else if (child.type === 'Mesh' && child.geometry.type === 'BoxGeometry') {
+        elementsToRemove.push(child)
+      }
+    })
+
+    // Remove the identified elements
+    elementsToRemove.forEach(element => {
+      this.scene.remove(element)
+      if (element.geometry) element.geometry.dispose()
+      if (element.material) element.material.dispose()
+    })
+
+    console.log('Removed route elements:', elementsToRemove.length)
     console.log('Scene children after cleanup:', this.scene.children.length)
 
     // Recreate the workout route with new parameters

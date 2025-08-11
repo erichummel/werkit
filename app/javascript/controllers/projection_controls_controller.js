@@ -8,25 +8,22 @@ export default class extends Controller {
     "elevationScale", "elevationScaleValue"
   ]
 
-        connect() {
+  connect() {
+    // Try to connect to the Three.js controller with retry mechanism
+    this.attemptConnection()
+  }
+
+  attemptConnection() {
     // Use global reference to the Three.js controller
     this.threeController = window.three_workout_controller
 
     if (!this.threeController) {
-      console.warn('Three.js controller not found in global scope')
-      // Try to find it the old way as fallback
-      const threeContainer = document.querySelector('[data-controller*="three-workout"]')
-      if (threeContainer) {
-        this.threeController = this.application.getControllerForElementAndIdentifier(
-          threeContainer,
-          'three-workout'
-        )
-      }
-
-      if (!this.threeController) {
-        console.warn('Three.js controller not available')
-        return
-      }
+      console.log('Three.js controller not found in global scope, retrying in 100ms...')
+      // Retry after a short delay to allow Three.js controller to initialize
+      setTimeout(() => {
+        this.attemptConnection()
+      }, 100)
+      return
     }
 
     console.log('Projection controls connected to Three.js controller via global reference')
