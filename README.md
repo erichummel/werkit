@@ -18,4 +18,4 @@ Here's a quick screencap of the UI in action, the letters in green are keyboard 
 
 The show route for workouts now shows a 3D view of the path taken with relative velocities and altitudes represented in a canvas rendering (powered by three.js) - still very rough around the edges as each workout needs to be nudged to fit/scale to the map it's rendered over.
 
-![3D view of workout](https://github.com/erichummel/werkit/blob/main/public/videos/three_dee_model.png)
+![3D view of workout](https://github.com/erichummel/werkit/blob/main/public/videos/three-dee-model.png)
