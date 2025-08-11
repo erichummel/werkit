@@ -399,3 +399,146 @@ img.leaflet-marker-shadow.cyclist {
   margin: 3px 0;
   opacity: 0.9;
 }
+
+/* Projection Controls Overlay */
+.projection-controls-overlay {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 320px;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.projection-controls-overlay .overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px 10px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.projection-controls-overlay .overlay-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+.projection-controls-overlay .overlay-content {
+  padding: 15px 20px 20px 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.control-group {
+  margin-bottom: 20px;
+}
+
+.control-group h4 {
+  margin: 0 0 10px 0;
+  color: #555;
+  font-size: 0.9em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.control-row label {
+  min-width: 80px;
+  font-size: 0.85em;
+  color: #666;
+  font-weight: 500;
+}
+
+.control-row input[type="range"] {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #ddd;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.control-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+.control-row input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+  border: none;
+}
+
+.control-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #4CAF50;
+}
+
+.control-row span {
+  min-width: 40px;
+  font-size: 0.8em;
+  color: #333;
+  font-weight: 600;
+  text-align: right;
+}
+
+.control-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.control-actions .btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 0.85em;
+}
+
+.btn-reset {
+  background: #f44336;
+  color: white;
+}
+
+.btn-reset:hover {
+  background: #d32f2f;
+}
+
+.btn-apply {
+  background: #4CAF50;
+  color: white;
+}
+
+.btn-apply:hover {
+  background: #45a049;
+}

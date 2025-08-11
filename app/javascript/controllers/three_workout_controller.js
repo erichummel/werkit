@@ -9,6 +9,9 @@ export default class extends Controller {
   }
 
   connect() {
+    // Store reference globally for other controllers to access
+    window.three_workout_controller = this
+
     this.initThree()
     this.animate()
   }
@@ -261,35 +264,61 @@ export default class extends Controller {
     let minLng = Math.min(...waypoints.map(p => p.longitude))
     let maxLng = Math.max(...waypoints.map(p => p.longitude))
 
-    // MAP PROJECTION PARAMETERS - ADJUST THESE TO FIX ALIGNMENT
-    const projectionParams = {
-      // Scale factors
-      latScale: 1.0,      // Latitude scaling factor
-      lngScale: 1.0,      // Longitude scaling factor
+    // Use stored projection params or defaults
+    if (!this.projectionParams) {
+      this.projectionParams = {
+        // Scale factors
+        latScale: 1.0,      // Latitude scaling factor
+        lngScale: 1.0,      // Longitude scaling factor
 
-      // Rotation (in radians)
-      rotation: 0,        // Rotation around Y axis
+        // Rotation (in radians)
+        rotation: 0,        // Rotation around Y axis
 
-      // Offsets
-      latOffset: 0,       // Latitude offset
-      lngOffset: 0,       // Longitude offset
+        // Offsets
+        latOffset: 0,       // Latitude offset
+        lngOffset: 0,       // Longitude offset
 
-      // Ground plane mapping
-      groundSize: 180,    // Size of ground plane (200x200 with margin)
-      centerOffset: 90,   // Center offset for ground plane
+        // Ground plane mapping
+        groundSize: 180,    // Size of ground plane (200x200 with margin)
+        centerOffset: 90,   // Center offset for ground plane
 
-      // Elevation scaling
-      elevationScale: 0.1, // How much to scale altitude
+        // Elevation scaling
+        elevationScale: 0.1, // How much to scale altitude
 
-      // Axis flipping
-      flipX: false,       // Flip X axis
-      flipZ: true,        // Flip Z axis (usually needed)
+        // Axis flipping
+        flipX: false,       // Flip X axis
+        flipZ: true,        // Flip Z axis (usually needed)
 
-      // Additional transformations
-      swapAxes: false     // Swap X and Z axes
+        // Additional transformations
+        swapAxes: false     // Swap X and Z axes
+      }
     }
 
-    return this.applyMapProjection(waypoints, minLat, maxLat, minLng, maxLng, projectionParams)
+    return this.applyMapProjection(waypoints, minLat, maxLat, minLng, maxLng, this.projectionParams)
+  }
+
+  updateProjectionParams(newParams) {
+    console.log('Three.js controller received projection params:', newParams)
+    this.projectionParams = { ...this.projectionParams, ...newParams }
+    console.log('Updated projection params:', this.projectionParams)
+    this.recreateWorkoutRoute()
+  }
+
+  recreateWorkoutRoute() {
+    console.log('Recreating workout route...')
+
+    // Remove existing route elements (keep ground plane and grid)
+    const originalChildren = [...this.scene.children]
+    this.scene.children = this.scene.children.filter(child =>
+      child.type === 'Mesh' && (child.geometry.type === 'PlaneGeometry' || child.type === 'GridHelper')
+    )
+
+    console.log('Removed route elements, kept ground plane and grid')
+    console.log('Scene children after cleanup:', this.scene.children.length)
+
+    // Recreate the workout route with new parameters
+    this.createWorkoutRoute()
+    console.log('Workout route recreated')
   }
 
   applyMapProjection(waypoints, minLat, maxLat, minLng, maxLng, params) {
