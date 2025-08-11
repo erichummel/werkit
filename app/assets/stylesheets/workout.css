@@ -474,6 +474,12 @@ img.leaflet-marker-shadow.cyclist {
   font-size: 0.85em;
   color: #666;
   font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.control-row label:hover {
+  color: #4CAF50;
 }
 
 .control-row input[type="range"] {

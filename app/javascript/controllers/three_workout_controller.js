@@ -268,8 +268,8 @@ export default class extends Controller {
     if (!this.projectionParams) {
       this.projectionParams = {
         // Scale factors
-        latScale: 0.85,      // Latitude scaling factor
-        lngScale: 0.86,      // Longitude scaling factor
+        latScale: 0.849,      // Latitude scaling factor
+        lngScale: 0.861,      // Longitude scaling factor
 
         // Rotation (in radians)
         rotation: 0,        // Rotation around Y axis
@@ -283,7 +283,7 @@ export default class extends Controller {
         centerOffset: 90,   // Center offset for ground plane
 
         // Elevation scaling
-        elevationScale: 0.1, // How much to scale altitude
+        elevationScale: 0.2, // How much to scale altitude
 
         // Axis flipping
         flipX: false,       // Flip X axis

@@ -17,7 +17,7 @@ export default class extends Controller {
     this.setupKeyboardNavigation()
   }
 
-      setupKeyboardNavigation() {
+  setupKeyboardNavigation() {
     document.addEventListener('keydown', (event) => {
       if (!this.selectedSlider) return
 
@@ -64,9 +64,26 @@ export default class extends Controller {
     })
   }
 
-  selectSlider(event) {
+    selectSlider(event) {
     const slider = event.target
-    console.log('Selecting slider:', slider)
+    this.selectSliderElement(slider)
+  }
+
+  selectSliderByLabel(event) {
+    const label = event.target
+    console.log('Selecting slider by label:', label)
+
+    // Use the 'for' attribute to find the associated slider
+    const sliderId = label.getAttribute('for')
+    const slider = document.getElementById(sliderId)
+
+    if (slider) {
+      this.selectSliderElement(slider)
+    }
+  }
+
+  selectSliderElement(slider) {
+    console.log('Selecting slider element:', slider)
 
     // Remove previous selection
     this.deselectSlider()
@@ -148,13 +165,13 @@ export default class extends Controller {
   // Scale controls
   updateLatScale() {
     const value = parseFloat(this.latScaleTarget.value)
-    this.latScaleValueTarget.textContent = value.toFixed(2)
+    this.latScaleValueTarget.textContent = value.toFixed(3)
     this.updateProjection()
   }
 
   updateLngScale() {
     const value = parseFloat(this.lngScaleTarget.value)
-    this.lngScaleValueTarget.textContent = value.toFixed(2)
+    this.lngScaleValueTarget.textContent = value.toFixed(3)
     this.updateProjection()
   }
 
