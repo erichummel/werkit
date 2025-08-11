@@ -58,6 +58,9 @@ export default class extends Controller {
     // Controls
     this.setupControls()
 
+    // Mouse interaction
+    this.setupMouseInteraction()
+
     // Handle window resize
     window.addEventListener('resize', this.onWindowResize.bind(this))
   }
@@ -422,7 +425,7 @@ export default class extends Controller {
     this.scene.add(line)
   }
 
-  createElevationProfile(points) {
+    createElevationProfile(points) {
     if (points.length < 2) return
 
     // Calculate actual speed range from the data
@@ -433,9 +436,8 @@ export default class extends Controller {
 
     console.log(`Speed range: ${minSpeed} to ${maxSpeed} m/s (range: ${speedRange})`)
 
-    // Create a 3D elevation profile
-    const geometry = new THREE.BufferGeometry()
-    const positions = []
+    // Store cubes for mouse interaction
+    this.waypointCubes = []
 
     points.forEach((point, index) => {
       // Create a small cube at each point to show elevation
@@ -455,6 +457,18 @@ export default class extends Controller {
       const cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
       cube.position.set(point.x, point.y + size/2, point.z)
       cube.castShadow = true
+
+            // Store original scale and waypoint data for interaction
+      cube.userData = {
+        originalScale: 1, // Store the scale factor, not the geometry size
+        waypointIndex: index,
+        waypointData: point
+      }
+
+      // Initialize scale to 1 (normal size)
+      cube.scale.setScalar(1)
+
+      this.waypointCubes.push(cube)
       this.scene.add(cube)
     })
   }
@@ -526,6 +540,81 @@ export default class extends Controller {
       this.controls.distance += event.deltaY * 0.1
       this.controls.distance = Math.max(2, Math.min(200, this.controls.distance))
     })
+  }
+
+  setupMouseInteraction() {
+    // Raycaster for mouse interaction
+    this.raycaster = new THREE.Raycaster()
+    this.mouse = new THREE.Vector2()
+    this.hoveredCube = null
+
+    // Mouse move event for hover detection
+    this.canvasTarget.addEventListener('mousemove', (event) => {
+      // Calculate mouse position in normalized device coordinates
+      const rect = this.canvasTarget.getBoundingClientRect()
+      this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
+      this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+
+      // Perform raycasting
+      this.raycaster.setFromCamera(this.mouse, this.camera)
+
+      if (this.waypointCubes) {
+        const intersects = this.raycaster.intersectObjects(this.waypointCubes)
+
+        if (intersects.length > 0) {
+          const cube = intersects[0].object
+          if (this.hoveredCube !== cube) {
+            // Mouse entered a new cube
+            if (this.hoveredCube) {
+              this.onCubeMouseOut(this.hoveredCube)
+            }
+            this.hoveredCube = cube
+            this.onCubeMouseOver(cube)
+          }
+        } else {
+          // Mouse left all cubes
+          if (this.hoveredCube) {
+            this.onCubeMouseOut(this.hoveredCube)
+            this.hoveredCube = null
+          }
+        }
+      }
+    })
+  }
+
+  onCubeMouseOver(cube) {
+    // Animate cube to 2x size
+    const targetScale = 2
+    this.animateCubeScale(cube, targetScale)
+  }
+
+  onCubeMouseOut(cube) {
+    // Animate cube back to original size
+    const targetScale = 1
+    this.animateCubeScale(cube, targetScale)
+  }
+
+  animateCubeScale(cube, targetScale) {
+    const startScale = cube.scale.x
+    const duration = 200 // milliseconds
+    const startTime = Date.now()
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / duration, 1)
+
+      // Easing function for smooth animation
+      const easeOut = 1 - Math.pow(1 - progress, 3)
+      const currentScale = startScale + (targetScale - startScale) * easeOut
+
+      cube.scale.setScalar(currentScale)
+
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      }
+    }
+
+    animate()
   }
 
   animate() {
