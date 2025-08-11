@@ -12,6 +12,12 @@ export default class extends Controller {
     // Store reference globally for other controllers to access
     window.three_workout_controller = this
 
+    // Unit configuration
+    this.units = {
+      altitude: 'feet', // 'feet' or 'meters'
+      speed: 'mph'      // 'mph' or 'mps' (meters per second)
+    }
+
     this.initThree()
     this.animate()
   }
@@ -636,6 +642,29 @@ export default class extends Controller {
     }
   }
 
+  // Unit conversion helpers
+  convertAltitude(meters) {
+    if (this.units.altitude === 'feet') {
+      return meters * 3.28084 // Convert meters to feet
+    }
+    return meters // Return meters
+  }
+
+  convertSpeed(mps) {
+    if (this.units.speed === 'mph') {
+      return mps * 2.23694 // Convert m/s to mph
+    }
+    return mps // Return m/s
+  }
+
+  getAltitudeUnit() {
+    return this.units.altitude === 'feet' ? 'ft' : 'm'
+  }
+
+  getSpeedUnit() {
+    return this.units.speed === 'mph' ? 'mph' : 'm/s'
+  }
+
   createWaypointDetailsPane(waypointData, originalWaypointData, index) {
     // Remove existing pane if it exists
     this.hideWaypointDetails()
@@ -651,8 +680,12 @@ export default class extends Controller {
     pane.setAttribute('data-controller', 'collapsible')
 
     // Format the data for display using original data for coordinates and altitude
-    const speed = waypointData.speed ? `${waypointData.speed.toFixed(2)} m/s` : 'N/A'
-    const altitude = originalWaypointData?.altitude ? `${originalWaypointData.altitude.toFixed(1)} m` : 'N/A'
+    const speedValue = waypointData.speed ? this.convertSpeed(waypointData.speed) : null
+    const speed = speedValue ? `${speedValue.toFixed(1)} ${this.getSpeedUnit()}` : 'N/A'
+
+    const altitudeValue = originalWaypointData?.altitude ? this.convertAltitude(originalWaypointData.altitude) : null
+    const altitude = altitudeValue ? `${altitudeValue.toFixed(0)} ${this.getAltitudeUnit()}` : 'N/A'
+
     const coordinates = originalWaypointData ? `${originalWaypointData.latitude?.toFixed(6) || 'N/A'}, ${originalWaypointData.longitude?.toFixed(6) || 'N/A'}` : 'N/A, N/A'
 
     pane.innerHTML = `
