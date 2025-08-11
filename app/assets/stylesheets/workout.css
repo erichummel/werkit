@@ -1,3 +1,10 @@
+/* Modern Font Family */
+body, html {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 main.index-container div.map {
   height: 100%;
   width: 100%;
@@ -507,22 +514,6 @@ img.leaflet-marker-shadow.cyclist {
   border: 2px solid #2E7D32 !important;
   border-radius: 6px !important;
   background: #f0f8f0 !important;
-  position: relative;
-}
-
-.control-row input[type="range"].selected::before {
-  content: "SELECTED";
-  position: absolute;
-  top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #4CAF50;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: bold;
-  z-index: 1000;
 }
 
 .control-row input[type="range"].selected::-webkit-slider-thumb {

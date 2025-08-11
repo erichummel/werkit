@@ -268,15 +268,15 @@ export default class extends Controller {
     if (!this.projectionParams) {
       this.projectionParams = {
         // Scale factors
-        latScale: 1.0,      // Latitude scaling factor
-        lngScale: 1.0,      // Longitude scaling factor
+        latScale: 0.85,      // Latitude scaling factor
+        lngScale: 0.86,      // Longitude scaling factor
 
         // Rotation (in radians)
         rotation: 0,        // Rotation around Y axis
 
         // Offsets
-        latOffset: 0,       // Latitude offset
-        lngOffset: 0,       // Longitude offset
+        latOffset: -0.0435,       // Latitude offset
+        lngOffset: 0.0116,       // Longitude offset
 
         // Ground plane mapping
         groundSize: 180,    // Size of ground plane (200x200 with margin)
