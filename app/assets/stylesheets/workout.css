@@ -599,3 +599,84 @@ img.leaflet-marker-shadow.cyclist {
 .btn-apply:hover {
   background: #45a049;
 }
+
+/* Waypoint Details Overlay */
+.waypoint-details-overlay {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 280px;
+  max-width: 350px;
+  max-height: 80vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1000;
+}
+
+.waypoint-details-overlay .overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px 10px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.waypoint-details-overlay .overlay-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.waypoint-details-overlay .overlay-content {
+  padding: 15px 20px 20px 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.waypoint-info h2 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.waypoint-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.waypoint-stats .stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.waypoint-stats .stat:last-child {
+  border-bottom: none;
+}
+
+.waypoint-stats .stat .label {
+  font-weight: 500;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.waypoint-stats .stat .value {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9em;
+  text-align: right;
+}

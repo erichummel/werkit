@@ -462,7 +462,9 @@ export default class extends Controller {
       cube.userData = {
         originalScale: 1, // Store the scale factor, not the geometry size
         waypointIndex: index,
-        waypointData: point
+        waypointData: point,
+        // Store the original waypoint data from the source
+        originalWaypointData: this.waypointsValue[index]
       }
 
       // Initialize scale to 1 (normal size)
@@ -542,11 +544,12 @@ export default class extends Controller {
     })
   }
 
-  setupMouseInteraction() {
+    setupMouseInteraction() {
     // Raycaster for mouse interaction
     this.raycaster = new THREE.Raycaster()
     this.mouse = new THREE.Vector2()
     this.hoveredCube = null
+    this.selectedCube = null
 
     // Mouse move event for hover detection
     this.canvasTarget.addEventListener('mousemove', (event) => {
@@ -569,7 +572,10 @@ export default class extends Controller {
               this.onCubeMouseOut(this.hoveredCube)
             }
             this.hoveredCube = cube
-            this.onCubeMouseOver(cube)
+            // Only apply hover effect if cube is not selected
+            if (cube !== this.selectedCube) {
+              this.onCubeMouseOver(cube)
+            }
           }
         } else {
           // Mouse left all cubes
@@ -580,6 +586,109 @@ export default class extends Controller {
         }
       }
     })
+
+    // Mouse click event for waypoint selection
+    this.canvasTarget.addEventListener('click', (event) => {
+      if (this.waypointCubes) {
+        const intersects = this.raycaster.intersectObjects(this.waypointCubes)
+
+        if (intersects.length > 0) {
+          const cube = intersects[0].object
+          this.selectWaypoint(cube)
+        }
+      }
+    })
+  }
+
+  selectWaypoint(cube) {
+    // Deselect previous waypoint
+    if (this.selectedCube) {
+      this.deselectWaypoint(this.selectedCube)
+    }
+
+    // Select new waypoint
+    this.selectedCube = cube
+    this.animateCubeScale(cube, 3) // Scale to 3x
+
+    // Update waypoint details pane
+    this.updateWaypointDetails(cube)
+  }
+
+  deselectWaypoint(cube) {
+    this.selectedCube = null
+    this.animateCubeScale(cube, 1) // Return to normal size
+    this.hideWaypointDetails()
+  }
+
+  updateWaypointDetails(cube) {
+    const waypointData = cube.userData.waypointData
+    const originalWaypointData = cube.userData.originalWaypointData
+    const index = cube.userData.waypointIndex
+
+    // Create or update the waypoint details pane
+    this.createWaypointDetailsPane(waypointData, originalWaypointData, index)
+  }
+
+  hideWaypointDetails() {
+    const existingPane = document.getElementById('waypoint-details-pane')
+    if (existingPane) {
+      existingPane.remove()
+    }
+  }
+
+  createWaypointDetailsPane(waypointData, originalWaypointData, index) {
+    // Remove existing pane if it exists
+    this.hideWaypointDetails()
+
+    // Debug: log the waypoint data to see what's available
+    console.log('Processed waypoint data:', waypointData)
+    console.log('Original waypoint data:', originalWaypointData)
+
+    // Create the waypoint details pane
+    const pane = document.createElement('div')
+    pane.id = 'waypoint-details-pane'
+    pane.className = 'waypoint-details-overlay'
+    pane.setAttribute('data-controller', 'collapsible')
+
+    // Format the data for display using original data for coordinates and altitude
+    const speed = waypointData.speed ? `${waypointData.speed.toFixed(2)} m/s` : 'N/A'
+    const altitude = originalWaypointData?.altitude ? `${originalWaypointData.altitude.toFixed(1)} m` : 'N/A'
+    const coordinates = originalWaypointData ? `${originalWaypointData.latitude?.toFixed(6) || 'N/A'}, ${originalWaypointData.longitude?.toFixed(6) || 'N/A'}` : 'N/A, N/A'
+
+    pane.innerHTML = `
+      <div class="overlay-header">
+        <h3>Waypoint ${index + 1}</h3>
+        <button class="toggle-btn" data-action="click->collapsible#toggle" data-collapsible-target="toggle">
+          <span class="toggle-icon">−</span>
+        </button>
+      </div>
+
+      <div class="overlay-content" data-collapsible-target="content">
+        <div class="waypoint-info">
+          <div class="waypoint-stats">
+            <div class="stat">
+              <span class="label">Speed:</span>
+              <span class="value">${speed}</span>
+            </div>
+            <div class="stat">
+              <span class="label">Altitude:</span>
+              <span class="value">${altitude}</span>
+            </div>
+            <div class="stat">
+              <span class="label">Coordinates:</span>
+              <span class="value">${coordinates}</span>
+            </div>
+            <div class="stat">
+              <span class="label">Position:</span>
+              <span class="value">X: ${waypointData.x?.toFixed(2) || 'N/A'}, Y: ${waypointData.y?.toFixed(2) || 'N/A'}, Z: ${waypointData.z?.toFixed(2) || 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+
+    // Add to the page
+    document.body.appendChild(pane)
   }
 
   onCubeMouseOver(cube) {
@@ -589,9 +698,11 @@ export default class extends Controller {
   }
 
   onCubeMouseOut(cube) {
-    // Animate cube back to original size
-    const targetScale = 1
-    this.animateCubeScale(cube, targetScale)
+    // Only animate back to original size if cube is not selected
+    if (cube !== this.selectedCube) {
+      const targetScale = 1
+      this.animateCubeScale(cube, targetScale)
+    }
   }
 
   animateCubeScale(cube, targetScale) {
