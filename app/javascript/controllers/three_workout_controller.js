@@ -434,14 +434,15 @@ export default class extends Controller {
         z: z,
         y: (point.table.altitude || 0) * params.elevationScale,
         speed: point.table.speed || 0,
+        course: point.table.course || 0,
         index: index
       }
 
       // Debug first few points
       if (index < 3) {
         console.log(`Point ${index}:`, {
-          original: { lat: point.table.latitude, lng: point.table.longitude, alt: point.table.altitude },
-          projected: { x: result.x, y: result.y, z: result.z, speed: result.speed }
+          original: { lat: point.table.latitude, lng: point.table.longitude, alt: point.table.altitude, course: point.table.course },
+          projected: { x: result.x, y: result.y, z: result.z, speed: result.speed, course: result.course }
         })
       }
 
@@ -485,7 +486,7 @@ export default class extends Controller {
     this.scene.add(line)
   }
 
-    createElevationProfile(points) {
+  createElevationProfile(points) {
     if (points.length < 2) return
 
     // Calculate actual speed range from the data
@@ -496,30 +497,48 @@ export default class extends Controller {
 
     console.log(`Speed range: ${minSpeed} to ${maxSpeed} m/s (range: ${speedRange})`)
 
-    // Store cubes for mouse interaction
+    // Store cones for mouse interaction
     this.waypointCubes = []
 
     points.forEach((point, index) => {
-      // Create a small cube at each point to show elevation
-      const size = 0.5
-      const cubeGeometry = new THREE.BoxGeometry(size, size, size)
+      // Create a cone at each point to show direction of travel
+      const radius = 0.3
+      const height = 0.6
+      const coneGeometry = new THREE.ConeGeometry(radius, height, 8)
 
       // Color based on speed relative to actual range (green = slow, red = fast)
       const speedRatio = speedRange > 0 ? (point.speed - minSpeed) / speedRange : 0
       const color = new THREE.Color()
       color.setHSL(0.3 * (1 - speedRatio), 1, 0.5) // Green to red
 
-      const cubeMaterial = new THREE.MeshLambertMaterial({
+      const coneMaterial = new THREE.MeshLambertMaterial({
         color: color,
         transparent: true,
         opacity: 0.8
       })
-      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
-      cube.position.set(point.x, point.y + size/2, point.z)
-      cube.castShadow = true
+      const cone = new THREE.Mesh(coneGeometry, coneMaterial)
 
-            // Store original scale and waypoint data for interaction
-      cube.userData = {
+      // Position the cone at the waypoint
+      cone.position.set(point.x, point.y + height/2, point.z)
+      cone.castShadow = true
+
+                  // Rotate the cone to point in the direction of travel
+      // First, rotate the cone to point horizontally (along X-axis) instead of up
+      cone.rotation.z = Math.PI / 2
+
+      // Then apply the course rotation around the Y-axis
+      // Course is in degrees, where 0 is North, 90 is East, etc.
+      // Add 90 degrees to align with compass directions
+      const courseRadians = ((point.course || 0) + 90) * Math.PI / 180
+      cone.rotation.y = -courseRadians // Negative because Three.js Y-axis rotation is opposite
+
+      // Debug course values for first few cones
+      if (index < 3) {
+        console.log(`Cone ${index}: course=${point.course}°, radians=${courseRadians}, rotation.y=${cone.rotation.y}, rotation.z=${cone.rotation.z}`)
+      }
+
+      // Store original scale and waypoint data for interaction
+      cone.userData = {
         originalScale: 1, // Store the scale factor, not the geometry size
         waypointIndex: index,
         waypointData: point,
@@ -528,10 +547,10 @@ export default class extends Controller {
       }
 
       // Initialize scale to 1 (normal size)
-      cube.scale.setScalar(1)
+      cone.scale.setScalar(1)
 
-      this.waypointCubes.push(cube)
-      this.scene.add(cube)
+      this.waypointCubes.push(cone)
+      this.scene.add(cone)
     })
   }
 
