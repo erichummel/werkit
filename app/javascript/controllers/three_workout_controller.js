@@ -4,8 +4,7 @@ import * as THREE from "three"
 export default class extends Controller {
   static targets = ["canvas"]
   static values = {
-    workoutData: Object,
-    waypoints: Array
+    workoutId: Number
   }
 
   connect() {
@@ -18,8 +17,32 @@ export default class extends Controller {
       speed: 'mph'      // 'mph' or 'mps' (meters per second)
     }
 
-    this.initThree()
-    this.animate()
+    // Fetch workout data
+    this.loadWorkoutData()
+  }
+
+  async loadWorkoutData() {
+    try {
+      console.log('Loading workout data for ID:', this.workoutIdValue)
+      const response = await fetch(`/workouts/${this.workoutIdValue}.json`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log('Loaded workout data:', data)
+
+      this.workoutData = data
+      this.waypointsValue = data.waypoints || []
+
+      console.log('Waypoints loaded:', this.waypointsValue.length, 'waypoints')
+
+      // Initialize Three.js after data is loaded
+      this.initThree()
+      this.animate()
+    } catch (error) {
+      console.error('Error loading workout data:', error)
+    }
   }
 
   disconnect() {
@@ -56,9 +79,11 @@ export default class extends Controller {
     this.setupLighting()
 
     // Ground plane
+    console.log('Creating ground plane...')
     this.createGround()
 
     // Create workout route
+    console.log('About to create workout route with waypoints:', this.waypointsValue?.length || 0)
     this.createWorkoutRoute()
 
     // Controls
@@ -95,10 +120,12 @@ export default class extends Controller {
   }
 
   createGround() {
+    console.log('createGround called')
     // Create a large ground plane
     const groundGeometry = new THREE.PlaneGeometry(200, 200)
 
     // Create map texture
+    console.log('Creating map texture...')
     this.createMapTexture(groundGeometry)
 
     // Add grid helper (optional, can be removed if map is clear enough)
@@ -109,8 +136,10 @@ export default class extends Controller {
     this.scene.add(gridHelper)
   }
 
-    createMapTexture(geometry) {
+  createMapTexture(geometry) {
+    console.log('createMapTexture called with waypoints:', this.waypointsValue?.length || 0)
     if (!this.waypointsValue || this.waypointsValue.length === 0) {
+      console.log('No waypoints for map, using fallback ground')
       // Fallback to simple ground if no waypoints
       const groundMaterial = new THREE.MeshLambertMaterial({
         color: 0x90EE90,
@@ -220,8 +249,8 @@ export default class extends Controller {
 
   calculateMapBounds() {
     const waypoints = this.waypointsValue
-    const lats = waypoints.map(p => p.latitude)
-    const lngs = waypoints.map(p => p.longitude)
+    const lats = waypoints.map(p => p.table.latitude)
+    const lngs = waypoints.map(p => p.table.longitude)
 
     return {
       minLat: Math.min(...lats),
@@ -245,9 +274,14 @@ export default class extends Controller {
   }
 
   createWorkoutRoute() {
+    console.log('createWorkoutRoute called with waypoints:', this.waypointsValue?.length || 0)
     if (!this.waypointsValue || this.waypointsValue.length === 0) {
+      console.log('No waypoints available, returning early')
       return
     }
+
+    console.log('Sample waypoint data:', this.waypointsValue[0])
+    console.log('Sample waypoint keys:', Object.keys(this.waypointsValue[0]))
 
     // Normalize coordinates to fit in our scene
     const normalizedPoints = this.normalizeCoordinates(this.waypointsValue)
@@ -262,14 +296,19 @@ export default class extends Controller {
     this.createMarkers(normalizedPoints)
   }
 
-    normalizeCoordinates(waypoints) {
-    if (waypoints.length === 0) return []
+        normalizeCoordinates(waypoints) {
+      if (waypoints.length === 0) return []
 
-    // Find bounds
-    let minLat = Math.min(...waypoints.map(p => p.latitude))
-    let maxLat = Math.max(...waypoints.map(p => p.latitude))
-    let minLng = Math.min(...waypoints.map(p => p.longitude))
-    let maxLng = Math.max(...waypoints.map(p => p.longitude))
+      console.log('normalizeCoordinates called with waypoints:', waypoints.length)
+      console.log('First waypoint:', waypoints[0])
+
+      // Find bounds - waypoints are wrapped in a 'table' property
+      let minLat = Math.min(...waypoints.map(p => p.table.latitude))
+      let maxLat = Math.max(...waypoints.map(p => p.table.latitude))
+      let minLng = Math.min(...waypoints.map(p => p.table.longitude))
+      let maxLng = Math.max(...waypoints.map(p => p.table.longitude))
+
+      console.log('Bounds:', { minLat, maxLat, minLng, maxLng })
 
     // Use stored projection params or defaults
     if (!this.projectionParams) {
@@ -349,6 +388,9 @@ export default class extends Controller {
   }
 
   applyMapProjection(waypoints, minLat, maxLat, minLng, maxLng, params) {
+    console.log('applyMapProjection called with bounds:', { minLat, maxLat, minLng, maxLng })
+    console.log('Projection params:', params)
+
     const latRange = maxLat - minLat
     const lngRange = maxLng - minLng
 
@@ -356,10 +398,12 @@ export default class extends Controller {
     const maxRange = Math.max(latRange, lngRange)
     const scale = maxRange / params.groundSize
 
+    console.log('Ranges and scale:', { latRange, lngRange, maxRange, scale })
+
     return waypoints.map((point, index) => {
-      // Apply scaling and offsets
-      let lat = (point.latitude - minLat) * params.latScale + params.latOffset
-      let lng = (point.longitude - minLng) * params.lngScale + params.lngOffset
+      // Apply scaling and offsets - waypoints are wrapped in a 'table' property
+      let lat = (point.table.latitude - minLat) * params.latScale + params.latOffset
+      let lng = (point.table.longitude - minLng) * params.lngScale + params.lngOffset
 
       // Apply axis flipping
       if (params.flipX) lng = -lng
@@ -385,13 +429,23 @@ export default class extends Controller {
         z = (lat / scale) - params.centerOffset
       }
 
-      return {
+            const result = {
         x: x,
         z: z,
-        y: (point.altitude || 0) * params.elevationScale,
-        speed: point.speed || 0,
+        y: (point.table.altitude || 0) * params.elevationScale,
+        speed: point.table.speed || 0,
         index: index
       }
+
+      // Debug first few points
+      if (index < 3) {
+        console.log(`Point ${index}:`, {
+          original: { lat: point.table.latitude, lng: point.table.longitude, alt: point.table.altitude },
+          projected: { x: result.x, y: result.y, z: result.z, speed: result.speed }
+        })
+      }
+
+      return result
     })
   }
 
@@ -470,7 +524,7 @@ export default class extends Controller {
         waypointIndex: index,
         waypointData: point,
         // Store the original waypoint data from the source
-        originalWaypointData: this.waypointsValue[index]
+        originalWaypointData: this.waypointsValue[index].table
       }
 
       // Initialize scale to 1 (normal size)

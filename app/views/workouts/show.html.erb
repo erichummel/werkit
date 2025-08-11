@@ -3,8 +3,7 @@
 <div class="workout-3d-fullscreen">
   <div
     data-controller="three-workout"
-    data-three-workout-workout-data-value="<%= @workout.as_json(include_waypoints: true).to_json %>"
-    data-three-workout-waypoints-value="<%= @workout.waypoints.map(&:to_h).to_json %>"
+    data-three-workout-workout-id-value="<%= @workout.id %>"
     class="three-container">
     <canvas
       data-three-workout-target="canvas"
