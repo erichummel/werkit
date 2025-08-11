@@ -222,8 +222,6 @@ export default class extends Controller {
     }
   }
 
-
-
   calculateOptimalZoom(bounds) {
     const latDiff = bounds.maxLat - bounds.minLat
     const lngDiff = bounds.maxLng - bounds.minLng
@@ -304,7 +302,7 @@ export default class extends Controller {
     this.recreateWorkoutRoute()
   }
 
-    recreateWorkoutRoute() {
+  recreateWorkoutRoute() {
     console.log('Recreating workout route...')
 
     // Remove only the route-specific elements (lines, markers, elevation cubes)
