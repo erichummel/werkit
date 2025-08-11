@@ -9,6 +9,7 @@
     <div class='distance'><%= workout.distance %></div>
   </div>
   <div class='controls'>
+    <%= link_to '🔍', workout_path(workout) %>
     <%= link_to '✏️', edit_workout_path(workout) %>
     <%= link_to '🗑️', workout, method: :delete, data: { confirm: 'Are you sure?' } %>
   </div>
