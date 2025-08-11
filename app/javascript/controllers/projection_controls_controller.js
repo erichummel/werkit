@@ -11,6 +11,68 @@ export default class extends Controller {
   connect() {
     // Try to connect to the Three.js controller with retry mechanism
     this.attemptConnection()
+
+    // Add keyboard event listener for slider navigation
+    this.selectedSlider = null
+    this.setupKeyboardNavigation()
+  }
+
+  setupKeyboardNavigation() {
+    document.addEventListener('keydown', (event) => {
+      if (!this.selectedSlider) return
+
+      const step = parseFloat(this.selectedSlider.step)
+      const currentValue = parseFloat(this.selectedSlider.value)
+      const min = parseFloat(this.selectedSlider.min)
+      const max = parseFloat(this.selectedSlider.max)
+
+      let newValue = currentValue
+
+      switch(event.key) {
+        case 'ArrowLeft':
+        case 'ArrowDown':
+          newValue = Math.max(min, currentValue - step)
+          break
+        case 'ArrowRight':
+        case 'ArrowUp':
+          newValue = Math.min(max, currentValue + step)
+          break
+        default:
+          return
+      }
+
+      if (newValue !== currentValue) {
+        this.selectedSlider.value = newValue
+        this.selectedSlider.dispatchEvent(new Event('input'))
+        event.preventDefault()
+      }
+    })
+
+    // Click outside to deselect
+    document.addEventListener('click', (event) => {
+      if (!event.target.matches('input[type="range"]')) {
+        this.deselectSlider()
+      }
+    })
+  }
+
+  selectSlider(slider) {
+    // Remove previous selection
+    this.deselectSlider()
+
+    // Select new slider
+    this.selectedSlider = slider
+    slider.classList.add('selected')
+
+    // Add focus for accessibility
+    slider.focus()
+  }
+
+  deselectSlider() {
+    if (this.selectedSlider) {
+      this.selectedSlider.classList.remove('selected')
+      this.selectedSlider = null
+    }
   }
 
   attemptConnection() {

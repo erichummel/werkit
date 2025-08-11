@@ -497,6 +497,26 @@ img.leaflet-marker-shadow.cyclist {
   border: none;
 }
 
+.control-row input[type="range"]:focus {
+  outline: none;
+}
+
+.control-row input[type="range"].selected {
+  box-shadow: 0 0 0 2px #4CAF50, 0 0 0 4px rgba(76, 175, 80, 0.3);
+}
+
+.control-row input[type="range"].selected::-webkit-slider-thumb {
+  background: #2E7D32;
+  transform: scale(1.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.control-row input[type="range"].selected::-moz-range-thumb {
+  background: #2E7D32;
+  transform: scale(1.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 .control-row input[type="checkbox"] {
   width: 16px;
   height: 16px;
